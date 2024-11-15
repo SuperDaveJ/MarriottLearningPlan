@@ -1,0 +1,24 @@
+﻿
+/* Admin - Usage Report */
+
+label.control-label {
+    font-weight: 400;
+}
+
+label.control-label span {
+    /*cursor: pointer;*/
+}
+
+select.form-control {
+    padding: 4px 8px;
+    font-size: 1em;
+}
+
+#chartContainer {
+    display: none;
+    overflow-y: auto;
+}
+
+#gridContainer {
+    visibility: hidden;
+}

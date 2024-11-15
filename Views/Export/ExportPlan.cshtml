@@ -1,0 +1,86 @@
+﻿@using MILearningPlan.SharedLibrary;
+
+@model MILearningPlan.ViewModels.LearningPlan.UserSelectionsViewModel
+
+@{
+    ViewBag.Title = "Export";
+}
+
+@section styles {
+    <link href="~/css/ExportPlan.css" rel="stylesheet" />
+}
+
+<div class="inner-content">
+    <div id="titleArea">
+        <div id="titleTopLeft">
+            <label id="myLearningPlan">My Learning Plan</label>
+            <div id="brandDiv">@Model.Brand.BrandName</div>
+            <div id="ownershipDiv">@Model.Ownership.OwnershipType</div>
+            <div id="continentDiv">@Model.Continent.ContinentName</div>
+        </div>
+        <div id="titleTopRight">
+            <div id="nameDiv">@Model.FullName</div>
+            <div id="levelDiv">@Model.Level.LevelName @((Model.IsHGC) ? "- HGC" : "")</div>
+            <div id="workareaDiv">@Model.Workarea.WorkareaName</div>
+
+            <p id="functionDiv">
+                @{
+                    var functions = "";
+                    if (Model.FunctionList != null && @Model.FunctionList.Count > 0)
+                    {
+                        foreach (var item in @Model.FunctionList)
+                        {
+                            functions += HttpUtility.HtmlDecode(item.FunctionName + " &bull; ");
+                        }
+                        if (functions.Length > 2)
+                        {
+                            functions = functions.Substring(0, functions.Length - 2);
+                        }
+                        @Html.Raw(HttpUtility.HtmlEncode(functions))
+                    }
+                }
+            </p>
+        </div>
+    </div>
+    <table id="programsGrid">
+        <tbody id="build-plan-table-body">
+        @{
+            if (@Model.ProgramList != null)
+            {
+                if (@Model.ProgramList.Count > 0)
+                {
+                    var lastTiming = "";
+                    foreach (var item in @Model.ProgramList)
+                    {
+                        <tr class="table-details-row @((lastTiming != @item.TimingDescription) ? "heading-row" : "")">
+                            <td class="build-plan-group-heading">
+                                @{
+                                    if (lastTiming != @item.TimingDescription)
+                                    {
+                                        @item.TimingDescription
+                                        lastTiming = @item.TimingDescription;
+                                    }
+                                }
+                            <td>
+                                <div class="build-plan-course"><a href='@((@item.ProgramLink != null) ? @item.ProgramLink : "")' target='_blank'>@item.ProgramTitle</a></div>
+                                <div class="expand-details-row">@item.ProgramAdditionalDetails</div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                { 
+                    <tr class="table-details-row heading-row">
+                        <td class="build-plan-group-heading">
+
+                        <td>
+                            <div class="build-plan-course"></div>
+                            <div class="expand-details-row"><br />(No courses were found for your current selections)<br /><br /></div>
+                        </td>
+                    </tr>
+                }
+            }
+        }
+        </tbody>
+    </table>
+</div>

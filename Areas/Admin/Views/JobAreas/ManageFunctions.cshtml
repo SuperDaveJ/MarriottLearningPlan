@@ -1,0 +1,396 @@
+﻿@model MILearningPlan.ViewModels.Admin.AllFunctionsViewModel
+
+@{
+    ViewBag.Title = "Manage Role-Specific Functions";
+    var items = new List<SelectListItem>();
+}
+
+@section styles {
+    <link href="~/css/Admin/ManageFunctions.css" rel="stylesheet" />
+}
+
+<div class="admin-spacing">
+    <div class="row">
+        <div class="col-xs-12">
+            <table id="functionsGrid" class="dataTable">
+                <thead>
+                    <tr>
+                        <th>ID
+                        <th>Dependencies
+                        <th>Function
+                        <th class="column-centered column-small">Archived
+                        <th class="column-centered column-small"><button id="addFunction" class="btn btn-md btn-raised btn-default add-button">Add Function</button>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="addEditJobAreaDialog" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" title="Cancel">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                @Html.Partial("_AddEditFunction")
+            </div>
+            <div class="modal-footer">
+                <img class="popup-loading-image" src="~/images/loading2.gif" />
+                <button id="addEditButton" class="btn btn-raised btn-primary">Update</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteJobAreaDialog" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" title="Cancel">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <form id="deleteForm">
+                    @Html.Hidden("Function.FunctionID")
+                    @Html.Hidden("Function.Archived")
+                    @Html.Hidden("Function.FunctionName")
+                </form>
+                <div id="deleteMessage"></div>
+            </div>
+            <div class="modal-footer">
+                <img class="popup-loading-image" src="~/images/loading2.gif" />
+                <button id="deleteButton" class="btn btn-raised btn-primary">Delete</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var action = "";
+
+        $(function () {
+
+            showValidation('success', "The Functions below list all functions from all areas."+
+                " Editing a function allows changing the text as well as reassigning it to Continents, Brands and Levels.");
+
+            // Load grid
+            $('#functionsGrid').DataTable({
+                paging: true,
+                pagingType: "numbers",
+                searching: false,
+                ordering: false,
+                info: true,
+                dom: 'Blfr<t><ip>',
+                sAjaxDataProp: "FunctionList",
+                ajax: {
+                    url: "@Url.Action("GetFunctions", "JobAreas", new { area = "Admin" })",
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        showValidation('error', '@ViewBag.LoadError');
+                    }
+                },
+                columns: [
+                    { data: "FunctionID", visible: false },
+                    { data: "HasDependencies", visible: false },
+                    { data: "FunctionName" },
+                    {
+                        data: "Archived",
+                        className: "dt-center",
+                        render: function (val, type, row) {
+                            return (val === true) ? "<span>&#10004;</span>" : "";
+                        }
+                    },
+                    {
+                        data: null,
+                        className: "dt-center",
+                        render: function (data) {
+                            var buttons = '<button class="editor_edit btn btn-raised btn-default">Edit</button>';
+                            if (data.Archived) {
+                                buttons += '&nbsp; <button class="editor_unarchive btn btn-raised btn-default">Unarchive</button>';
+                            }
+                            else {
+                                buttons += '&nbsp; <button class="editor_delete btn btn-raised btn-default">Delete</button>';
+                            }
+                            return buttons;
+                        }
+                    }
+                ],
+                language: {
+                    emptyTable: "(No Functions were found)"
+                },
+                //select: "single",
+                buttons: [{
+                    extend: 'excel',
+                    text: '<span class="export-excel-button"></span>',
+                    titleAttr: 'Export to Excel',
+                    exportOptions: {
+                        columns: [2, 3]
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<span class="export-pdf-button"></span>',
+                    titleAttr: 'Export to PDF',
+                    exportOptions: {
+                        columns: [2, 3]
+                    }
+                }],
+                "fnDrawCallback": function () {
+                    var rowsPerPage = this.fnSettings()._iDisplayLength;
+                    var rowsToShow = this.fnSettings().fnRecordsDisplay();
+                    if (rowsToShow <= rowsPerPage || rowsPerPage == -1) {
+                        // hide pager if only 1 page
+                        $('.dataTables_paginate').css('visibility', 'hidden');
+                    }
+                    else {
+                        $('.dataTables_paginate').css('visibility', 'visible');
+                    }
+                }
+            });
+
+            setupMultiselects();
+
+            // Add
+            $('button#addFunction').on('click', function (e) {
+                action = "add";
+                e.preventDefault();
+                $('#addEditForm input').clearErrors();
+                deselectDropdowns();
+                
+                $('#addEditForm #Function_FunctionName').val('');
+                $('#addEditJobAreaDialog .modal-title').text('Add New Function');
+                $('button#addEditButton').text('Add');
+                $('#addEditJobAreaDialog').modal('show');
+            });
+
+            // Edit
+            $('#functionsGrid').on('click', 'button.editor_edit', function (e) {
+                action = "edit";
+                e.preventDefault();
+                $('#addEditForm input').clearErrors();
+                deselectDropdowns();
+
+                $('.popup-loading-image').show();
+                $('#addEditButton').hide();
+
+                var oTable = $('#functionsGrid').dataTable();
+                var row = $(this).parents("td")[0];
+                var pos = oTable.fnGetPosition(row);
+                var functionId = oTable.fnGetData(pos[0])["FunctionID"];
+                var continents = [],
+                    brands = [],
+                    levels = [];
+
+                $.when(
+                    // get async data
+                    continents = getFunctionAreaData(1, functionId),
+                    brands = getFunctionAreaData(2, functionId),
+                    levels = getFunctionAreaData(3, functionId)
+                ).then(function () {
+                    // wait then select assigned areas in dropdowns
+                    if (continents !== null) {
+                        var result = continents.responseJSON;
+                        if (!result.success) {
+                            showError();
+                            return false;
+                        }
+                        $.each(result.data, (function (i, item) {
+                            $('#continentItems').multiselect('select', item);
+                        }));
+                    }
+                    if (brands !== null) {
+                        var result = brands.responseJSON;
+                        if (!result.success) {
+                            showError();
+                            return false;
+                        }
+                        $.each(result.data, (function (i, item) {
+                            $('#brandItems').multiselect('select', item);
+                        }));
+                    }
+                    if (levels !== null) {
+                        var result = levels.responseJSON;
+                        if (!result.success) {
+                            showError();
+                            return false;
+                        }
+                        $.each(result.data, (function (i, item) {
+                            $('#levelItems').multiselect('select', item);
+                        }));
+                    }
+                    $('.popup-loading-image').hide();
+                    $('#addEditButton').show();
+                });
+
+                $('#addEditForm #Function_FunctionID').val(oTable.fnGetData(pos[0])["FunctionID"]);
+                $('#addEditForm #Function_Archived').val(oTable.fnGetData(pos[0])["Archived"]);
+                $('#addEditForm #Function_FunctionName').val(oTable.fnGetData(pos[0])["FunctionName"]);
+
+                $('#addEditJobAreaDialog .modal-title').text('Edit Function');
+                $('button#addEditButton').text('Update');
+                $('#addEditJobAreaDialog').modal('show');
+               
+            });
+
+            // Delete/Archive
+            $('#functionsGrid').on('click', 'button.editor_delete', function (e) {
+                action = "delete";  //delete/archive
+                e.preventDefault();
+                $('#deleteForm input').clearErrors();
+
+                var oTable = $('#functionsGrid').dataTable();
+                var row = $(this).parents("td")[0];
+                var pos = oTable.fnGetPosition(row);
+                $('#deleteForm #Function_FunctionID').val(oTable.fnGetData(pos[0])["FunctionID"]);
+                $('#deleteForm #Function_Archived').val(oTable.fnGetData(pos[0])["Archived"]);
+                $('#deleteForm #Function_FunctionName').val(oTable.fnGetData(pos[0])["FunctionName"]);
+
+                $('#deleteJobAreaDialog .modal-title').text('Delete Function');
+                var message = 'Are you sure you want to delete the selected Function?';
+                var buttonText = "Delete";
+                if (oTable.fnGetData(pos[0])["HasDependencies"] === true) {
+                    action = 'archive';
+                    message = 'The selected Function has data associated with it and cannot be deleted.  It will be archived instead and not visible to users.';
+                    $('#deleteForm #Function_Archived').val(true);
+                    buttonText = "Archive";
+                }
+                $('#deleteMessage').text(message);
+                $('button#deleteButton').text(buttonText);
+                $('#deleteJobAreaDialog').modal('show');
+            });
+
+            // Unarchive
+            $('#functionsGrid').on('click', 'button.editor_unarchive', function (e) {
+                action = "unarchive";
+                e.preventDefault();
+                $('#deleteForm input').clearErrors();
+
+                var oTable = $('#functionsGrid').dataTable();
+                var row = $(this).parents("td")[0];
+                var pos = oTable.fnGetPosition(row);
+                $('#deleteForm #Function_FunctionID').val(oTable.fnGetData(pos[0])["FunctionID"]);
+                $('#deleteForm #Function_Archived').val(false);
+                $('#deleteForm #Function_FunctionName').val(oTable.fnGetData(pos[0])["FunctionName"]);
+
+                $('#deleteJobAreaDialog .modal-title').text('Unarchive Function');
+                var message = 'Unarchive the Function so it will be visible to users?';
+
+                $('#deleteMessage').text(message);
+                $('button#deleteButton').text('Unarchive');
+                $('#deleteJobAreaDialog').modal('show');
+            });
+
+            $('button#addEditButton').click(function (e) {
+                editorUpdateGrid('#addEditForm', '#addEditJobAreaDialog');
+                return false;
+            });
+
+            $('button#deleteButton').click(function (e) {
+                editorUpdateGrid('#deleteForm', '#deleteJobAreaDialog');
+                return false;
+            });
+
+        });
+
+        function setupMultiselects() {
+            $('#continentItems').multiselect({
+                buttonWidth: '100%',
+                includeSelectAllOption: true,
+                includeSelectAllIfMoreThan: 1,
+                selectAllText: '(Select all)',
+                numberDisplayed: 0,
+            });
+
+            $('#brandItems').multiselect({
+                buttonWidth: '100%',
+                maxHeight: 200,
+                includeSelectAllOption: true,
+                includeSelectAllIfMoreThan: 1,
+                selectAllText: '(Select all)',
+                numberDisplayed: 0
+            });
+
+            $('#levelItems').multiselect({
+                buttonWidth: '100%',
+                includeSelectAllOption: true,
+                includeSelectAllIfMoreThan: 1,
+                selectAllText: '(Select all)',
+                numberDisplayed: 0
+            });
+        }
+
+        function deselectDropdowns() {
+            // deselect all
+            $('#continentItems option').each(function () {
+                $('#continentItems').multiselect('deselect', $(this).val());
+            });
+            $('#brandItems option').each(function () {
+                $('#brandItems').multiselect('deselect', $(this).val());
+            });
+            $('#levelItems option').each(function () {
+                $('#levelItems').multiselect('deselect', $(this).val());
+            });
+        }
+
+        // async get function assigned areas
+        function getFunctionAreaData(areaType, functionId) {
+            return $.ajax({
+                type: 'GET',
+                url: '@Url.Action("GetFunctionAreaData", "JobAreas", new { area = "Admin" })',
+                data: {
+                    areaType: areaType,
+                    functionID: functionId
+                }
+            });
+        }
+
+        function showError() {
+            $('.popup-loading-image').hide();
+            $('#addEditButton').show();
+            showValidation('error', result.message);
+        }
+
+        // add/edit/delete grid data and show validation after editor confirm
+        function editorUpdateGrid(formId, dialogId) {
+            var form = $(formId);
+            disableDialogButton(dialogId, true);
+            $('.popup-loading-image').show();
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("SaveFunctionChanges", "JobAreas", new { area = "Admin" })',
+                data: form.serialize() + '&action=' + action,
+                success: function (result) {
+                    resetDialog(dialogId);
+                    if (result.success) {
+                        $(dialogId).modal('hide');
+                        var oTable = $('#functionsGrid').DataTable();
+                        oTable.ajax.reload(null, false);
+                        showValidation('success', result.message);
+                    }
+                    else if (result.error) {
+                        $(dialogId).modal('hide');
+                        showValidation('error', result.message);
+                    }
+                    else if (dialogId.indexOf('delete') === -1) {
+                        // Update form with partial for ModelState errors
+                        form.html(result);
+                        setupMultiselects();
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    resetDialog(dialogId);
+                    $(dialogId).modal('hide');
+                    showValidation('error', '@ViewBag.LoadError');
+                }
+            });
+        }
+        
+    </script>
+}

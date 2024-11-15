@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DiscoveryClientResultsFile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Results>
+    <DiscoveryClientResult referenceType="System.Web.Services.Discovery.ContractReference" url="https://extranetdevsso.marriott.com/msso/MarriottAuth/MSSOMarriottAuth_Service_v1_0.wsdl" filename="MSSOMarriottAuth_Service_v1_0.wsdl" />
+    <DiscoveryClientResult referenceType="System.Web.Services.Discovery.ContractReference" url="https://extranetdevsso.marriott.com/msso/MarriottAuth/MarriottUser.asmx?wsdl" filename="MarriottUser.wsdl" />
+    <DiscoveryClientResult referenceType="System.Web.Services.Discovery.SchemaReference" url="https://extranetdevsso.marriott.com/msso/MarriottAuth/MSSO_DataTypes_v1_0.xsd" filename="MSSO_DataTypes_v1_0.xsd" />
+    <DiscoveryClientResult referenceType="System.Web.Services.Discovery.SchemaReference" url="https://extranetdevsso.marriott.com/msso/MarriottAuth/MSSO_MessageTypes_v1_0.xsd" filename="MSSO_MessageTypes_v1_0.xsd" />
+  </Results>
+</DiscoveryClientResultsFile>

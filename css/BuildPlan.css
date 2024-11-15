@@ -1,0 +1,229 @@
+﻿
+/* Build Plan page */
+
+body {
+    /*font-size: 1em;*/
+    /*color: #000;*/
+}
+
+.container,
+.body-content {
+    margin: 0;
+    padding: 0;
+    width: auto;
+    font-weight: 400;
+}
+
+.inner-content {
+    padding: 15px;
+    margin: 15px;
+}
+
+.build-plan-spacing {
+    padding-top: 20px;
+}
+
+.instruction-spacing {
+    padding-top: 10px;
+}
+
+.build-plan-pipe {
+    color: #000;
+    padding: 0 8px 0 8px;
+}
+
+#nameDiv {
+    font-size: 1.75em;
+    font-weight: bold;
+    color: #000;
+    margin: 5px 0 10px 0;
+}
+
+#levelDiv,
+#workareaDiv {
+    font-size: 1.125em;
+    font-weight: bold;
+    color: #000;
+}
+
+#brandDiv {
+    font-size: 1em;
+    font-weight: bold;
+    color: #000;
+}
+
+#ownershipDiv,
+#continentDiv {
+    font-size: 1em;
+    font-weight: 400;
+    color: #000;
+}
+
+#functionDiv {
+    font-size: 1em;
+    font-weight: 400;
+    color: #000;
+    margin: 20px 0;
+}
+
+#functionDiv ul {
+    padding-left: 20px;
+}
+
+#summaryTitle {
+    font-size: 1.375em;
+    color: #000;
+    margin: 10px 0;
+}
+
+.instructions {
+    color: #787f8c;
+    font-size: 1em;
+    font-weight: 400 !important;
+}
+
+#programsGrid {
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+    display: none;
+}
+
+.dataTable thead th {
+    display: none;
+}
+
+.dataTable tbody tr {
+    font-size: 1em;
+    color: #000;
+}
+
+table.dataTable tbody td {
+    padding: 2px 10px;
+}
+
+.dataTable tbody td {
+    border: none;
+}
+
+.build-plan-group-heading {
+    font-size: 1.125em !important;
+    font-weight: bold;
+    color: #dd2529 !important;
+    text-transform: uppercase;
+}
+
+.build-plan-group-heading td {
+    padding: 16px 0 4px 0 !important;
+}
+
+.build-plan-course a {
+    font-size: 1em;
+    color: #000;
+    text-decoration: underline;
+}
+
+td.details-control {
+    background: url('../images/plus.png') no-repeat 0 center;
+    cursor: pointer;
+    width: 16px;
+    padding: 0 4px 0 0 !important;
+}
+tr.shown td.details-control {
+    background: url('../images/minus.png') no-repeat 0 center;
+    width: 16px;
+}
+
+.expand-details-row {
+    padding-left: 20px !important;
+}
+
+.dataTables_wrapper {
+    padding-bottom: 10px;
+}
+
+.dataTables_info {
+    display: none;
+}
+
+.dataTables_wrapper .dataTables_paginate {
+    float: none;
+    text-align: center;
+}
+
+.dataTable.no-footer {
+    /* line below grid */
+    border-bottom: none !important;
+}
+
+.build-plan-button {
+    width: 140px;
+}
+
+#loading2 {
+    position: relative;
+    height: 32px;
+    /*left: -244px;*/
+    display: none;
+}
+
+
+/* Modal popup */
+
+.modal-dialog {
+    margin: 150px auto;
+}
+
+.modal-dialog .form-group {
+    margin: -8px 16px 0 16px !important;
+}
+
+.popup-loading-image {
+    display: none;
+    margin: 0 20px;
+}
+
+.modal-title {
+    font-weight: 600;
+}
+
+.modal-header {
+    color: #000;
+    background-color: #e7e7e7;
+    -moz-border-radius-topleft:  5px !important;
+    -webkit-border-top-left-radius:  5px !important;
+    border-top-left-radius:  5px !important;
+    -moz-border-radius-topright:  5px !important;
+    -webkit-border-top-right-radius:  5px !important;
+    border-top-right-radius:  5px !important;
+}
+
+.modal-header .close {
+    color: #394349 !important;
+    opacity: 0.5 !important;
+    text-shadow: 0 1px 0 #bbb;
+}
+
+.modal-header .close:hover {
+    color: #4a555e !important;
+    opacity: 1.0 !important;
+    text-shadow: 0 1px 0 #ccc;
+}
+
+#emailDialog input.text-box {
+    width: 100%;
+}
+
+#emailForm label {
+    font-weight: 400;
+    font-size: 1em;
+    color: #555;
+}
+
+#emailForm input,
+#emailForm select {
+    font-weight: 400;
+    font-size: 1em;
+    height: auto;
+    /*color: #000;*/
+}

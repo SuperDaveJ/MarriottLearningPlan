@@ -1,0 +1,324 @@
+﻿@model MILearningPlan.ViewModels.Admin.CourseCountReportViewModel
+
+@{
+    ViewBag.Title = "Count of Courses by EID Report";
+    var items = new List<SelectListItem>();
+}
+
+@section styles {
+    <link href="~/css/Admin/CourseCountReport.css" rel="stylesheet" />
+    <link href="~/css/Admin/datepicker-calendar.css" rel="stylesheet" />
+}
+
+<div class="row admin-spacing">
+    <div class="col-sm-12">
+        <div class="report-filters-title">Report Filters</div>
+        <hr />
+        @using (Html.BeginForm("GetCourseCountReport", "Reports", new { area = "Admin" }, FormMethod.Post, new { id = "reportForm" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+                <div class="col-sm-3">
+                    <div class="control-group">
+                        <label for="date-start" class="control-label">Start Date</label>
+                        <div class="controls">
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.StartDate, new { @id = "date-start", @class = "date-picker form-control" })
+                                <label for="date-start" class="input-group-addon btn">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <div class="control-group">
+                        <label for="date-end" class="control-label">End Date</label>
+                        <div class="controls">
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.EndDate, new { @id = "date-end", @class = "date-picker form-control" })
+                                <label for="date-end" class="input-group-addon btn">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    @{
+                        foreach (var item in ViewBag.MFTypes)
+                        {
+                            <div class="radio">
+                                <label>@Html.RadioButtonFor(m => m.MFTypeID, (int?)item.Value, (item.Key == "Both") ? new { @checked = "" } : null)@item.Key</label>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+            <div class="admin-spacing">
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Users:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                if (Model.UserList != null)
+                                {
+                                    foreach (var item in Model.UserList)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.UserID.ToString(), Text = item.EID });
+                                    }
+                                }
+                                @Html.DropDownListFor(x => x.UserList, items, new { @id = "userItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Continents:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                if (Model.ContinentList != null)
+                                {
+                                    foreach (var item in Model.ContinentList)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.ContinentID.ToString(), Text = item.ContinentName });
+                                    }
+                                }
+                                @Html.DropDownListFor(x => x.ContinentList, items, new { @id = "continentItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Brands:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                if (Model.BrandList != null)
+                                {
+                                    foreach (var item in Model.BrandList)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.BrandID.ToString(), Text = item.BrandName });
+                                    }
+                                }
+                                @Html.DropDownListFor(x => x.BrandList, items, new { @id = "brandItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Levels:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                if (Model.LevelList != null)
+                                {
+                                    foreach (var item in Model.LevelList)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.LevelID.ToString(), Text = item.LevelName });
+                                    }
+                                }
+                                @Html.DropDownListFor(x => x.LevelList, items, new { @id = "levelItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Work Areas:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                if (Model.WorkareaList != null)
+                                {
+                                    foreach (var item in Model.WorkareaList)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.WorkareaID.ToString() + "|" + item.WorkareaType, Text = item.WorkareaName });
+                                    }
+                                }
+                                @Html.DropDownListFor(x => x.WorkareaList, items, new { @id = "workareaItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Functions:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                if (Model.FunctionList != null)
+                                {
+                                    foreach (var item in Model.FunctionList)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.FunctionID.ToString(), Text = item.FunctionName });
+                                    }
+                                }
+                                @Html.DropDownListFor(x => x.FunctionList, items, new { @id = "functionItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="admin-spacing">
+    <button id="generateReport" class="btn btn-raised btn-primary">Generate Report</button>
+    <img class="popup-loading-image" src="~/images/loading2.gif" />
+</div>
+
+<div id="gridContainer" class="admin-spacing">
+    <div class="row">
+        <div class="col-xs-12">
+            <table id="coursesGrid" class="dataTable">
+                <thead>
+                    <tr>
+                        <th>EID
+                        <th>Property
+                        <th>Continent
+                        <th>Brand
+                        <th>Level
+                        <th>Work Area
+                        <th class="column-small">Roles
+                        <th>Mgt Type
+                        <th>Log Date
+                        <th>Total
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var action = "";
+        var chartColors = [];
+
+        $(function () {
+
+            showValidation('success', "The Count of Courses by EID report displays a total count by user of courses and related categories that users selected when building their plan. " +
+                "You can select multiple items in the dropdowns to filter the report.  Each dropdown shows all possible items and are not filtered by others above it. " +
+                "Note: if a wide date range or few selections are made, the report may return a very large data set which is not suggested.");
+
+            // set start/end date defaults
+            $("#date-start").datepicker("option", "defaultDate", "-1m");
+            $("#date-end").datepicker("option", "defaultDate", "0");
+
+            setupMultiselects();
+
+            // Init grid
+            $('#coursesGrid').DataTable({
+                paging: true,
+                pagingType: "numbers",
+                iDisplayLength: 25,
+                searching: true,
+                ordering: true,
+                info: true,
+                dom: 'Blfr<t><ip>',
+                //sAjaxDataProp: "",
+                data: [],
+                columns: [
+                    { data: 'EID' },
+                    { data: 'LocationType' },
+                    { data: 'Continent' },
+                    { data: 'Brand' },
+                    { data: 'EmployeeLevel' },
+                    { data: 'Workarea' },
+                    { data: 'RoleFunctions' },
+                    { data: 'ManagementRole' },
+                    {
+                        data: 'UserLogDate',
+                        className: 'dt-center',
+                        type: 'date',
+                        render: function (val, type, full, meta) {
+                            //if (type == 'display') {
+                                var date = new Date(parseInt(val.substr(6)));
+                                var options = { year: 'numeric', month: 'numeric', day: 'numeric' };
+                                return date.toLocaleDateString('en-US', options);
+                            //}
+                            //return val;
+                        }
+                    },
+                    { data: 'NumberOfPrograms', className: 'dt-center' },
+                ],
+                language: {
+                    emptyTable: '(No totals were available for the given selections)'
+                },
+                //select: "single",
+                buttons: [{
+                    extend: 'excel',
+                    text: '<span class="export-excel-button"></span>',
+                    titleAttr: 'Export to Excel',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<span class="export-pdf-button"></span>',
+                    titleAttr: 'Export to PDF',
+                    exportOptions: {
+                        columns: ':visible'
+                    },
+                    orientation: 'landscape'
+                }],
+                'fnDrawCallback': function () {
+                    var rowsPerPage = this.fnSettings()._iDisplayLength;
+                    var rowsToShow = this.fnSettings().fnRecordsDisplay();
+                    if (rowsToShow <= rowsPerPage || rowsPerPage == -1) {
+                        // hide pager if only 1 page
+                        $('.dataTables_paginate').css('visibility', 'hidden');
+                    }
+                    else {
+                        $('.dataTables_paginate').css('visibility', 'visible');
+                    }
+                }
+               
+            });
+            
+            $('.dataTables_filter label input').addClass('form-control');
+
+            // Load grid data
+            $('#generateReport').click(function (e) {
+                $('#validationSuccess').hide();
+                $('#validationError').hide();
+                var form = $('#reportForm');
+                $('.popup-loading-image').show();
+                $.ajax({
+                    type: 'POST',
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function (result) {
+                        $('.popup-loading-image').hide();
+                        if (result.success) {
+                            var oTable = $('#coursesGrid').DataTable();
+                            oTable.clear().draw();
+                            oTable.rows.add(result.data).draw();
+                            $('#gridContainer').css('visibility', 'visible');
+                        }
+                        else if (result.error) {
+                            $('.popup-loading-image').hide();
+                            showValidation('error', result.message);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        $('.popup-loading-image').hide();
+                        showValidation('error', '@ViewBag.LoadError');
+                    }
+                });
+                return false;
+            });
+
+        });
+
+    </script>
+}

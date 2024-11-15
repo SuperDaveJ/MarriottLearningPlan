@@ -1,0 +1,505 @@
+﻿@using MILearningPlan.ViewModels.Admin
+@model MILearningPlan.ViewModels.Admin.ManageRequiredTrainingViewModel
+
+@{
+    ViewBag.Title = "Training Item Mapping";
+    var items = new List<SelectListItem>();
+}
+
+@section styles {
+    <link href="~/css/Admin/ManageRequiredTraining.css" rel="stylesheet" />
+}
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="report-filters-title">Search Filters</div>
+        <hr />
+        @using (Html.BeginForm("GetRequiredTrainingItems", "RequiredTraining", new { area = "Admin" }, FormMethod.Post, new { id = "reportForm" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+                <div class="col-sm-2">Course Title:</div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        @Html.TextBoxFor(m => m.CourseTitleSearch, new { @id = "course-title", @class = "form-control" })
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-2">
+                    @{
+                        foreach (var item in ViewBag.MFTypes)
+                        {
+                            var state = (item.Key == "Both") ? "checked" : "";
+                            <div class="radio">
+                                <label>@Html.RadioButtonFor(m => m.MFTypeID, (int?)item.Value, new { @checked = state })@item.Key</label>
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="col-sm-2">
+                    <div class="control-group">
+                        <label for="course-start" class="control-label">Starting Course ID</label>
+                        @Html.TextBoxFor(m => m.StartCourseID, new { @id = "course-start", @class = "form-control" })
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="control-group">
+                        <label for="course-end" class="control-label">Ending Course ID</label>
+                        @Html.TextBoxFor(m => m.EndCourseID, new { @id = "course-end", @class = "form-control" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-spacing">
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Continents:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                if (Model.ContinentList != null)
+                                {
+                                    foreach (var item in Model.ContinentList)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.ContinentID.ToString(), Text = item.ContinentName });
+                                    }
+                                }
+                                @Html.DropDownListFor(x => x.ContinentList, items, new { @id = "continentItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Brands:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                if (Model.BrandList != null)
+                                {
+                                    foreach (var item in Model.BrandList)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.BrandID.ToString(), Text = item.BrandName });
+                                    }
+                                }
+                                @Html.DropDownListFor(x => x.BrandList, items, new { @id = "brandItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Levels:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                if (Model.LevelList != null)
+                                {
+                                    foreach (var item in Model.LevelList)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.LevelID.ToString(), Text = item.LevelName });
+                                    }
+                                }
+                                @Html.DropDownListFor(x => x.LevelList, items, new { @id = "levelItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Work Areas:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                if (Model.WorkareaList != null)
+                                {
+                                    foreach (var item in Model.WorkareaList)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.WorkareaID.ToString() + "|" + item.WorkareaType, Text = item.WorkareaName });
+                                    }
+                                }
+                                @Html.DropDownListFor(x => x.WorkareaList, items, new { @id = "workareaItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Functions:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                if (Model.FunctionList != null)
+                                {
+                                    foreach (var item in Model.FunctionList)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.FunctionID.ToString(), Text = item.FunctionName });
+                                    }
+                                }
+                                @Html.DropDownListFor(x => x.FunctionList, items, new { @id = "functionItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+                                }
+    </div>
+</div>
+
+<div class="admin-spacing">
+    <button id="generateReport" class="btn btn-raised btn-primary">Search Courses</button>
+    &nbsp; <button id="addCourse" class="btn btn-raised btn-primary">Add New Course</button>
+    <img class="popup-loading-image" src="~/images/loading2.gif" />
+</div>
+
+<div id="gridContainer" class="admin-spacing">
+    <div class="row">
+        <div class="col-xs-12">
+            <table id="coursesGrid" class="dataTable">
+                <thead>
+                    <tr>
+                        <th>ID
+                        <th>Course Title
+                        <th>Property
+                        <th>Course
+                        <th>Brand
+                        <th>Level
+                        <th>Work Area
+                        <th>Role
+                        <th>Mgt Type
+                        <th class="column-centered column-small">
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="addEditTrainingDialog" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" title="Cancel">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                @Html.Partial("_AddEditRequiredTraining", new AddEditProgramViewModel(), new ViewDataDictionary { { "MFTypes", ViewBag.MFTypes }, { "TimingUnits", ViewBag.TimingUnits } })
+            </div>
+            <div class="modal-footer">
+                <img class="popup-loading-image" src="~/images/loading2.gif" />
+                <button id="addEditButton" class="btn btn-raised btn-primary">Update</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteTrainingDialog" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" title="Cancel">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <form id="deleteForm">
+                    @Html.Hidden("ProgramID")
+                </form>
+                <div id="deleteMessage"></div>
+            </div>
+            <div class="modal-footer">
+                <img class="popup-loading-image" src="~/images/loading2.gif" />
+                <button id="deleteButton" class="btn btn-raised btn-primary">Delete</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var action = "";
+
+        $(function () {
+
+            showValidation('success', "Training Item Mapping allows you to search and map existing courses to various categories and settings. " +
+                "The Course Title will search based on a partial text match. " +
+                "You can select multiple items in the dropdowns to filter the search.  Each dropdown shows all possible items and are not filtered by others above it. " +
+                "Note the search will display only the first 5,000 courses found to improve performance.");
+
+            setupMultiselects();
+
+            $('[data-toggle="tooltip"]').tooltip({
+                html: true
+            });
+
+            // Init grid
+            $('#coursesGrid').DataTable({
+                paging: true,
+                pagingType: "numbers",
+                iDisplayLength: 25,
+                searching: true,
+                ordering: true,
+                info: true,
+                dom: 'Blfr<t><ip>',
+                //sAjaxDataProp: "",
+                data: [],
+                columns: [
+                    { data: 'ProgramID' },
+                    { data: 'ProgramTitle' },
+                    { data: 'LocationType' },
+                    { data: 'Continent' },
+                    { data: 'Brand' },
+                    { data: 'EmployeeLevel' },
+                    { data: 'Workarea' },
+                    { data: 'RoleFunction' },
+                    { data: 'ManagementRole' },
+                    {
+                        data: null,
+                        className: "dt-center",
+                        render: function (data) {
+                            var buttons = '<button class="editor_edit btn btn-raised btn-default">Edit</button>';
+                            if (data.Archived) {
+                                buttons += '&nbsp; <button class="editor_unarchive btn btn-raised btn-default">Unarchive</button>';
+                            }
+                            else {
+                                buttons += '&nbsp; <button class="editor_delete btn btn-raised btn-default">Delete</button>';
+                            }
+                            return buttons;
+                        }
+                    }
+                ],
+                language: {
+                    emptyTable: '(No courses were found for the given selections)'
+                },
+                //select: "single",
+                buttons: [{
+                    extend: 'excel',
+                    text: '<span class="export-excel-button"></span>',
+                    titleAttr: 'Export to Excel',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<span class="export-pdf-button"></span>',
+                    titleAttr: 'Export to PDF',
+                    exportOptions: {
+                        columns: ':visible'
+                    },
+                    orientation: 'landscape'
+                }],
+                'fnDrawCallback': function () {
+                    var rowsPerPage = this.fnSettings()._iDisplayLength;
+                    var rowsToShow = this.fnSettings().fnRecordsDisplay();
+                    if (rowsToShow <= rowsPerPage || rowsPerPage == -1) {
+                        // hide pager if only 1 page
+                        $('.dataTables_paginate').css('visibility', 'hidden');
+                    }
+                    else {
+                        $('.dataTables_paginate').css('visibility', 'visible');
+                    }
+                }
+
+            });
+
+            $('.dataTables_filter label input').addClass('form-control');
+
+            // Add
+            $('button#addCourse').on('click', function (e) {
+                action = "add";
+                e.preventDefault();
+                $('#addEditForm input').clearErrors();
+
+                //$('#addEditForm #CourseIDDiv').hide();
+                $('#addEditForm #ProgramTitle').val('');
+                $('#addEditForm #ProgramTiming').val('');
+                $('#addEditForm #timingUnitItems').prop('selectedIndex', 0);
+                $('#addEditForm #MFTypeID[value=0]').prop('checked', true);
+
+                $('#addEditTrainingDialog .modal-title').text('Add New Course');
+                $('button#addEditButton').text('Add');
+                $('#addEditTrainingDialog').modal('show');
+            });
+
+            // Edit
+            $('#coursesGrid').on('click', 'button.editor_edit', function (e) {
+                action = "edit";
+                e.preventDefault();
+                $('#addEditForm input').clearErrors();
+
+                //$('#addEditForm #CourseIDDiv').show();
+
+                //var data = loadCourseDetails();
+
+                var oTable = $('#coursesGrid').dataTable();
+                var row = $(this).parents("td")[0];
+                var pos = oTable.fnGetPosition(row);
+                $('#addEditForm #ProgramID').val(oTable.fnGetData(pos[0])["ProgramID"]);
+                $('#addEditForm #ProgramTitle').val(oTable.fnGetData(pos[0])["ProgramTitle"]);
+                //$('#addEditForm #ProgramAdditionalDetails').val(oTable.fnGetData(pos[0])["ProgramAdditionalDetails"]);
+                //$('#addEditForm #ProgramLink').val(oTable.fnGetData(pos[0])["ProgramLink"]);
+                //$('#addEditForm #ProgramTiming').val(oTable.fnGetData(pos[0])["ProgramTiming"]);
+                //$('#addEditForm #TimingUnitID').val(oTable.fnGetData(pos[0])["TimingUnitID"]);
+                //$('#addEditForm #TimingDescription').val(oTable.fnGetData(pos[0])["TimingDescription"]);
+                var mfType = oTable.fnGetData(pos[0])["LocationType"];
+                switch (mfType) {
+                    case "Managed": mfType = 1; break;
+                    case "Franchised": mfType = 2; break;
+                    case null: mfType = 0; break;
+                }
+                $('#addEditForm #MFTypeID[value=' + mfType + ']').prop('checked', true);
+
+                $('#addEditTrainingDialog .modal-title').text('Edit Course');
+                $('button#addEditButton').text('Update');
+                $('#addEditTrainingDialog').modal('show');
+            });
+
+            // Delete/Archive
+            $('#coursesGrid').on('click', 'button.editor_delete', function (e) {
+                action = "delete";  //delete/archive
+                e.preventDefault();
+                $('#deleteForm input').clearErrors();
+
+                var oTable = $('#coursesGrid').dataTable();
+                var row = $(this).parents("td")[0];
+                var pos = oTable.fnGetPosition(row);
+                $('#deleteForm #ProgramID').val(oTable.fnGetData(pos[0])["ProgramID"]);
+                $('#deleteForm #ProgramTitle').val(oTable.fnGetData(pos[0])["ProgramTitle"]);
+
+                $('#deleteTrainingDialog .modal-title').text('Delete Course');
+                var message = "Are you sure you want to delete the selected course and all its associations?";
+                var buttonText = "Delete";
+                //if (oTable.fnGetData(pos[0])["HasDependencies"] === true) {
+                //    action = 'archive';
+                //    message = 'The selected Course has data associated with it and cannot be deleted.  It will be archived instead and not visible to users.';
+                //    $('#deleteForm #Archived').val(true);
+                //    buttonText = "Archive";
+                //}
+                $('#deleteMessage').text(message);
+                $('button#deleteButton').text(buttonText);
+                $('#deleteTrainingDialog').modal('show');
+            });
+
+            // Load grid data
+            $('#generateReport').click(function (e) {
+                var form = $('#reportForm');
+                $('.popup-loading-image').show();
+                $.ajax({
+                    type: 'POST',
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function (result) {
+                        $('.popup-loading-image').hide();
+                        if (result.success) {
+                            var oTable = $('#coursesGrid').DataTable();
+                            oTable.clear().draw();
+                            oTable.rows.add(result.data).draw();
+                            $('#gridContainer').css('visibility', 'visible');
+                        }
+                        else if (result.error) {
+                            $('.popup-loading-image').hide();
+                            showValidation('error', result.message);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        $('.popup-loading-image').hide();
+                        showValidation('error', '@ViewBag.LoadError');
+                    }
+                });
+                return false;
+            });
+
+        });
+
+        // Load course details for popup
+        @*function loadCourseDetails() {
+            var form = $('#reportForm');
+            $('.popup-loading-image').show();
+            $.ajax({
+                type: 'POST',
+                url: form.attr('action'),
+                data: form.serialize(),
+                success: function (result) {
+                    $('.popup-loading-image').hide();
+                    if (result.success) {
+                        return result.data;
+                    }
+                    else if (result.error) {
+                        $('.popup-loading-image').hide();
+                        showValidation('error', result.message);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    $('.popup-loading-image').hide();
+                    showValidation('error', '@ViewBag.LoadError');
+                }
+            });
+            return false;
+        }*@
+
+        function setupMultiselects() {
+            $('#userItems').multiselect({
+                buttonWidth: '100%',
+                maxHeight: 200,
+                includeSelectAllOption: true,
+                includeSelectAllIfMoreThan: 1,
+                selectAllText: '(Select all)',
+                numberDisplayed: 0,
+            });
+
+            $('#continentItems').multiselect({
+                buttonWidth: '100%',
+                maxHeight: 200,
+                includeSelectAllOption: true,
+                includeSelectAllIfMoreThan: 1,
+                selectAllText: '(Select all)',
+                numberDisplayed: 0,
+            });
+
+            $('#brandItems').multiselect({
+                buttonWidth: '100%',
+                maxHeight: 200,
+                includeSelectAllOption: true,
+                includeSelectAllIfMoreThan: 1,
+                selectAllText: '(Select all)',
+                numberDisplayed: 0
+            });
+
+            $('#levelItems').multiselect({
+                buttonWidth: '100%',
+                maxHeight: 200,
+                includeSelectAllOption: true,
+                includeSelectAllIfMoreThan: 1,
+                selectAllText: '(Select all)',
+                numberDisplayed: 0
+            });
+
+            $('#workareaItems').multiselect({
+                buttonWidth: '100%',
+                maxHeight: 200,
+                includeSelectAllOption: true,
+                includeSelectAllIfMoreThan: 1,
+                selectAllText: '(Select all)',
+                numberDisplayed: 0
+            });
+
+            $('#functionItems').multiselect({
+                buttonWidth: '100%',
+                maxHeight: 200,
+                includeSelectAllOption: true,
+                includeSelectAllIfMoreThan: 1,
+                selectAllText: '(Select all)',
+                numberDisplayed: 0
+            });
+
+            $('.dropdown-div').show();
+        }
+
+    </script>
+}

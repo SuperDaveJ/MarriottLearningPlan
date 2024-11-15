@@ -1,0 +1,19 @@
+﻿
+/* Admin - Associations Report */
+
+label.control-label {
+    font-weight: 400;
+}
+
+.dropdown-div {
+    display: none;
+}
+
+#gridContainer {
+    visibility: hidden;
+}
+
+#coursesGrid th,
+#coursesGrid td {
+    font-size: 0.9em;
+}

@@ -1,0 +1,19 @@
+﻿
+/* Admin - User Log On Report */
+
+label.control-label {
+    font-weight: 400;
+}
+
+label.control-label span {
+    /*cursor: pointer;*/
+}
+
+#chartContainer {
+    display: none;
+    overflow-y: auto;
+}
+
+#gridContainer {
+    visibility: hidden;
+}

@@ -1,0 +1,84 @@
+﻿@model MILearningPlan.ViewModels.LearningPlan.UserSelectionsViewModel
+
+@{
+    ViewBag.Title = "Send Test Email";
+}
+
+@section styles {
+    <link href="~/css/Admin/TestEmail.css" rel="stylesheet" />
+}
+
+@using (Html.BeginForm("SendTestEmail", "General", new { area = "Admin" }, FormMethod.Post, new { id = "emailForm" }))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="admin-spacing">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-2">Email To:</div>
+                    <div class="col-sm-5">
+                        <div class="form-group">
+                            @Html.TextBoxFor(x => x.Email.EmailAddress, new { @class = "form-control", @placeholder = "Enter email address" })
+                            @Html.ValidationMessageFor(x => x.Email.EmailAddress)
+                            <div class="admin-spacing pull-right">
+                                <img class="popup-loading-image" src="~/images/loading2.gif" />
+                                <button id="sendEmailButton" class="btn btn-raised btn-primary">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="admin-spacing">
+    <p>Example of test email to be sent:</p>
+    <hr />
+    <div id="sampleEmail" class="admin-spacing text-center">
+        <p><img src="~/images/LD_email_logo.png" /></p><br />
+        <p>This is a test email sent from the Marriott Build A Learning Plan system.</p>
+        <p>Marriott L + D Team</p>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+
+            showValidation('success', "Test the server email settings and a user's receipt of the email by sending a pre-formatted email.  Note: the email may take 15 minutes or longer to be received, depending on email servers.");
+
+            // validate address then send email
+            $('#sendEmailButton').click(function (e) {
+                e.preventDefault();
+                $('#emailForm input').clearErrors();
+
+                var buttonId = '#sendEmailButton';
+                toggleLoading(buttonId, true);
+
+                var form = $('#emailForm');
+                $.ajax({
+                    type: 'POST',
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function (result) {
+                        toggleLoading(buttonId, false);
+                        if (result.success) {
+                            showValidation('success', result.message);
+                        }
+                        else if (result.error) {
+                            showValidation('error', result.message);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        toggleLoading(buttonId, false);
+                        showValidation('error', jqXHR.responseText);
+                    }
+                });
+            });
+        });
+
+    </script>
+}
+

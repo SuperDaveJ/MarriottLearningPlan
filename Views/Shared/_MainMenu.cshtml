@@ -1,0 +1,37 @@
+﻿@using MILearningPlan.SharedLibrary;
+
+<div id="menu-outer">
+    <ul class="nav">
+        
+        <li class="menu-item">
+            <a href="@Url.Action("Index", "Home", new { area = "" }, null)">
+                <span class="glyphicon glyphicon-home"></span> Home
+            </a>
+        </li>
+        
+        @if (Session[Resources.SessionKeys.UserId] != null)
+        {
+            <li class="menu-item">
+                <a href="@Url.Action("Help", "Home", new { area = "" }, null)">
+                    <span class="glyphicon glyphicon-question-sign"></span> Help
+                </a>
+            </li>
+            
+            if (Session[Resources.SessionKeys.IsAdmin] != null && (bool)Session[Resources.SessionKeys.IsAdmin] == true)
+            {
+                <li class="menu-item">
+                    <a href="@Url.Action("Index", "Home", new { area = "Admin" }, null)">
+                        <span class="glyphicon glyphicon-lock"></span> Admin
+                    </a>
+                </li>
+            }
+
+            <li class="menu-item">
+                <a id="logoutMenu" href="@Url.Action("Logout", "Home", new { area = "" }, null)">
+                    <span class="glyphicon glyphicon-log-out"></span> Logout
+                </a>
+            </li>
+        }
+        
+    </ul>
+</div>

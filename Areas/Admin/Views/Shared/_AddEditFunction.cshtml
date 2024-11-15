@@ -1,0 +1,77 @@
+﻿@model MILearningPlan.ViewModels.Admin.AllFunctionsViewModel
+
+@{
+    var items = new List<SelectListItem>();
+}
+
+<form id="addEditForm">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="row">
+                <div class="col-sm-3">Continents:</div>
+                <div class="col-sm-9">
+                    <div class="form-group">
+                        @{
+                            items.Clear();
+                            if (Model.ContinentList != null)
+                            {
+                                foreach (var item in Model.ContinentList)
+                                {
+                                    items.Add(new SelectListItem() { Value = item.ContinentID.ToString(), Text = item.ContinentName });
+                                }
+                            }
+                            @Html.DropDownListFor(x => x.ContinentList, items, new { @id = "continentItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-3">Brands:</div>
+                <div class="col-sm-9">
+                    <div class="form-group">
+                        @{
+                            items.Clear();
+                            if (Model.BrandList != null)
+                            {
+                                foreach (var item in Model.BrandList)
+                                {
+                                    items.Add(new SelectListItem() { Value = item.BrandID.ToString(), Text = item.BrandName });
+                                }
+                            }
+                            @Html.DropDownListFor(x => x.BrandList, items, new { @id = "brandItems", @class = "form-control", @multiple = "multiple" })
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-3">Levels:</div>
+                <div class="col-sm-9">
+                    <div class="form-group">
+                        @{
+                            items.Clear();
+                            if (Model.LevelList != null)
+                            {
+                                foreach (var item in Model.LevelList)
+                                {
+                                    items.Add(new SelectListItem() { Value = item.LevelID.ToString(), Text = item.LevelName });
+                                }
+                            }
+                            @Html.DropDownListFor(x => x.LevelList, items, new { @id = "levelItems", @class = "form-control", @multiple = "multiple" })
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-3">Function:</div>
+                <div class="col-sm-9">
+                    <div class="form-group">
+                        @Html.Hidden("Function.FunctionID")
+                        @Html.Hidden("Function.Archived")
+                        @Html.TextBoxFor(x => x.Function.FunctionName, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(x => x.Function.FunctionName)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

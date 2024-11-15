@@ -1,0 +1,21 @@
+﻿
+/* Admin - Manage Workareas */
+
+#levelItems.form-control {
+    font-size: 0.95em;
+    height: auto;
+}
+
+#workareaSelectDiv,
+#workareaLabelDiv {
+    display: none;
+}
+
+.multiselect-container li label.radio > input {
+    /* hide radio buttons */
+    display: none;
+}
+
+.multiselect-container li label.radio {
+    padding: 3px 20px 3px 13px;
+}

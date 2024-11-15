@@ -1,0 +1,797 @@
+﻿@using MILearningPlan.ViewModels.Admin
+@using MILearningPlan.ViewModels.LearningPlan
+@model ManageCoursesViewModel
+
+@{
+    ViewBag.Title = "Manage Courses";
+    var items = new List<SelectListItem>();
+}
+
+@section styles {
+    <link href="~/css/Admin/ManageCourses.css" rel="stylesheet" />
+}
+
+<div class="row admin-spacing">
+    <div class="col-sm-12">
+        <div class="report-filters-title">Search Filters</div>
+        <hr />
+        @using (Html.BeginForm("GetCourses", "Courses", new { area = "Admin" }, FormMethod.Post, new { id = "reportForm" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="admin-spacing">
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Continent:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                var continents = new List<ContinentViewModel>(Model.ContinentList);
+                                if (continents != null)
+                                {
+                                    continents.Insert(0, new ContinentViewModel() { ContinentName = "&nbsp;" });
+                                    foreach (var item in continents)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.ContinentID.ToString(), Text = item.ContinentName });
+                                    }
+                                }
+                                @Html.DropDownList("continentItems", items, new { @id = "continentItems", @class = "form-control" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Brand:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                var brands = new List<BrandViewModel>(Model.BrandList);
+                                if (brands != null)
+                                {
+                                    brands.Insert(0, new BrandViewModel() { BrandName = "&nbsp;" });
+                                    foreach (var item in brands)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.BrandID.ToString(), Text = item.BrandName });
+                                    }
+                                }
+                                @Html.DropDownList("brandItems", items, new { @id = "brandItems", @class = "form-control" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Level:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                var levels = new List<LevelViewModel>(Model.LevelList);
+                                if (levels != null)
+                                {
+                                    levels.Insert(0, new LevelViewModel() { LevelName = "&nbsp;" });
+                                    foreach (var item in levels)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.LevelID.ToString(), Text = item.LevelName });
+                                    }
+                                }
+                                @Html.DropDownList("levelItems", items, new { @id = "levelItems", @class = "form-control" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Work Area:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                var workareas = new List<WorkareaViewModel>(Model.WorkareaList);
+                                if (workareas != null)
+                                {
+                                    workareas.Insert(0, new WorkareaViewModel() { WorkareaName = "&nbsp;" } );
+                                    foreach (var item in workareas)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.WorkareaID.ToString() + "|" + item.WorkareaType, Text = item.WorkareaName });
+                                    }
+                                }
+                                @Html.DropDownList("workareaItems", items, new { @id = "workareaItems", @class = "form-control" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row dropdown-div">
+                    <div class="col-sm-2">Functions:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @{
+                                items.Clear();
+                                var functions = new List<FunctionViewModel>(Model.FunctionList);
+                                if (functions != null)
+                                {
+                                    foreach (var item in functions)
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.FunctionID.ToString(), Text = item.FunctionName });
+                                    }
+                                }
+                                @Html.DropDownList("functionItems", items, new { @id = "functionItems", @class = "form-control", @multiple = "multiple" })
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-spacing">
+                <div class="row">
+                    <div class="col-sm-2">Course Title:</div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @Html.TextBoxFor(m => m.CourseTitleSearch, new { @id = "course-title", @class = "form-control" })
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-offset-2 col-sm-2">
+                        <div class="control-group">
+                            <label for="course-start" class="control-label">Starting Course ID</label>
+                            @Html.TextBoxFor(m => m.StartCourseID, new { @id = "course-start", @class = "form-control" })
+                        </div>
+                    </div>
+                    <div class="col-sm-2">
+                        <div class="control-group">
+                            <label for="course-end" class="control-label">Ending Course ID</label>
+                            @Html.TextBoxFor(m => m.EndCourseID, new { @id = "course-end", @class = "form-control" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="admin-spacing">
+    <button id="generateReport" class="btn btn-raised btn-primary">Search Courses</button>
+    &nbsp; <button id="addCourse" class="btn btn-raised btn-primary">Add New Course</button>
+    <img id="gridLoadingImage" class="popup-loading-image" src="~/images/loading2.gif" />
+</div>
+
+<div id="gridContainer" class="admin-spacing">
+    <div class="row">
+        <div class="col-xs-12">
+            <table id="coursesGrid" class="dataTable">
+                <thead>
+                    <tr>
+                        <th>LocationTypeID
+                        <th>ProgramLink
+                        <th>ManagedProgramTiming
+                        <th>ManagedTimingUnitID
+                        <th>FranchisedProgramTiming
+                        <th>FranchisedTimingUnitID
+                        <th>ID
+                        <th>Dependencies
+                        <th>Course Title
+                        <th>Course Description
+                        <th>Property
+                        <th>Timing
+                        <th class="column-small">Timing Group
+                        <th class="column-centered">Archived
+                        <th class="column-small">
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="addEditCourseDialog" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" title="Cancel">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                @Html.Partial("_AddEditCourse", new AddEditCourseViewModel(), new ViewDataDictionary {
+                   { "MFTypes", ViewBag.MFTypes },
+                   { "TimingUnits", ViewBag.TimingUnits },
+                   { "ContinentList", Model.ContinentList },
+                   { "BrandList", Model.BrandList },
+                   { "LevelList", Model.LevelList },
+                   { "WorkareaList", Model.WorkareaList },
+                   { "FunctionList", Model.FunctionList }
+               })
+            </div>
+            <div class="modal-footer">
+                <img id="addEditLoadingImage" class="popup-loading-image" src="~/images/loading2.gif" />
+                <button id="addEditButton" class="btn btn-raised btn-primary">Update</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="deleteCourseDialog" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" title="Cancel">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <form id="deleteForm">
+                    @Html.Hidden("ProgramID")
+                    @Html.Hidden("Archived")
+                </form>
+                <div id="deleteMessage"></div>
+            </div>
+            <div class="modal-footer">
+                <img id="deleteLoadingImage" class="popup-loading-image" src="~/images/loading2.gif" />
+                <button id="deleteButton" class="btn btn-raised btn-primary">Delete</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var action = "";
+
+        $(function () {
+
+            showValidation('success', "Manage Courses allows you to search, update or add courses. The Course Title will search based on a partial text match. " +
+                "Each dropdown shows all possible items and are not filtered by others above it.");
+
+            var addEditInstructions = "All items are required below except Functions. Managed/Franchised/Both sets the timing. " +
+                "Select one or more Continents, Brands, and Level/Work area combinations. For each Work area selected, its Level must also be selected above it. " +
+                "Functions are only displayed based on the selected Continent, Brand, and Level.";
+
+            //initMultiselect('functionItems');
+            //$('.dropdown-div').show();
+            setupMultiselects();
+
+            //initMultiselect('functionItems');
+
+            // Init grid
+            $('#coursesGrid').DataTable({
+                paging: true,
+                pagingType: "numbers",
+                iDisplayLength: 25,
+                searching: true,
+                ordering: true,
+                info: true,
+                dom: 'Blfr<t><ip>',
+                //sAjaxDataProp: "",
+                data: [],
+                columns: [
+                    { data: 'LocationTypeID', visible: false },
+                    { data: 'ProgramLink', visible: false },
+                    { data: 'ManagedProgramTiming', visible: false },
+                    { data: 'ManagedTimingUnitID', visible: false },
+                    { data: 'FranchisedProgramTiming', visible: false },
+                    { data: 'FranchisedTimingUnitID', visible: false },
+                    { data: 'ProgramID', className: "dt-center" },
+                    { data: 'HasDependencies', visible: false },
+                    { data: 'ProgramTitle' },
+                    { data: 'ProgramAdditionalDetails' },
+                    {
+                        data: 'LocationType',
+                        className: "dt-center",
+                        width: "10%"
+                    },
+                    {
+                        data: 'ProgramTimingDisplay',
+                        className: "dt-center",
+                        width: "10%"
+                    },
+                    {
+                        data: 'TimingUnit',
+                        className: "dt-center",
+                        width: "15%"
+                    },
+                    {
+                        data: "Archived",
+                        className: "dt-center",
+                        render: function (val, type, row) {
+                            return (val === true) ? "<span>&#10004;</span>" : "";
+                        }
+                    },
+                    {
+                        data: null,
+                        className: "dt-center",
+                        render: function (data) {
+                            var buttons = '<button class="editor_edit btn btn-raised btn-default">Edit</button>';
+                            if (data.Archived) {
+                                buttons += '&nbsp; <button class="editor_unarchive btn btn-raised btn-default">Unarchive</button>';
+                            }
+                            else {
+                                buttons += '&nbsp; <button class="editor_delete btn btn-raised btn-default">Delete</button>';
+                            }
+                            return buttons;
+                        }
+                    }
+                ],
+                order: [[6, 'asc' ]], // default ProgramID sort
+                language: {
+                    emptyTable: '(No courses were found for the given selections)'
+                },
+                //select: "single",
+                buttons: [{
+                    extend: 'excel',
+                    text: '<span class="export-excel-button"></span>',
+                    titleAttr: 'Export to Excel',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<span class="export-pdf-button"></span>',
+                    titleAttr: 'Export to PDF',
+                    exportOptions: {
+                        columns: ':visible'
+                    },
+                    orientation: 'landscape'
+                }],
+                'fnDrawCallback': function () {
+                    var rowsPerPage = this.fnSettings()._iDisplayLength;
+                    var rowsToShow = this.fnSettings().fnRecordsDisplay();
+                    if (rowsToShow <= rowsPerPage || rowsPerPage == -1) {
+                        // hide pager if only 1 page
+                        $('.dataTables_paginate').css('visibility', 'hidden');
+                    }
+                    else {
+                        $('.dataTables_paginate').css('visibility', 'visible');
+                    }
+                }
+            });
+
+            $('.dataTables_filter label input').addClass('form-control');
+
+            // add/edit dialog items
+            $('#addEditCourseDialog').on('show.bs.modal', function () {
+                $('#addEditCourseDialog .modal .modal-body').css('overflow-y', 'auto');
+                $('#addEditCourseDialog .modal .modal-body').css('min-height', 920);
+                //$('#addEditCourseDialog .modal .modal-body').css('max-height', $(window).height() * 0.6);
+            });
+
+            $('[data-toggle="tooltip"]').tooltip({
+                html: true
+            });
+
+            $('#addEditForm input#MFTypeID').click(function () {
+                showHideMFType($(this).val());
+            });
+
+            setupAddEditMultiselects();
+
+            // Load grid data
+            $('#generateReport').click(function () {
+                loadGrid();
+            });
+
+            // Add
+            $('button#addCourse').on('click', function (e) {
+                action = "add";
+                e.preventDefault();
+                $('#addEditForm input').clearErrors();
+                $('#addEditValidationError').hide();
+                showAddEditValidation('success', addEditInstructions);
+
+                $('#addEditForm #ProgramTitle').val('');
+                $('#addEditForm #ProgramTiming').val('');
+                $('#addEditForm #ProgramAdditionalDetails').val('');
+                $('#addEditForm #ProgramLink').val('');
+                $('#addEditForm #ManagedProgramTiming').val('');
+                $('#addEditForm #FranchisedProgramTiming').val('');
+                $('#addEditForm #ManagedTimingUnitItems').val('0');
+                $('#addEditForm #FranchisedTimingUnitItems').val('0');
+                $('#addEditForm #MFTypeID[value=1]').prop('checked', true);
+                showHideMFType(1);
+                deselectAddEditDropdowns();
+                showHideFunctions();
+
+                $('#addEditCourseDialog .modal-title').text('Add New Course');
+                $('#addEditButton').text('Add');
+                $('#addEditCourseDialog').modal('show');
+            });
+
+            // Edit
+            $('#coursesGrid').on('click', 'button.editor_edit', function (e) {
+                action = "edit";
+                e.preventDefault();
+                $('#addEditForm input').clearErrors();
+                $('#addEditValidationError').hide();
+                showAddEditValidation('success', addEditInstructions);
+
+                var oTable = $('#coursesGrid').dataTable();
+                var row = $(this).parents("td")[0];
+                var pos = oTable.fnGetPosition(row);
+                var programID = oTable.fnGetData(pos[0])["ProgramID"];
+
+                $('addEditLoadingImage').show();
+                $('#addEditButton').hide();
+
+                $('#addEditForm #ProgramID').val(programID);
+                $('#addEditForm #ProgramTitle').val(oTable.fnGetData(pos[0])["ProgramTitle"]);
+                $('#addEditForm #ProgramAdditionalDetails').val(oTable.fnGetData(pos[0])["ProgramAdditionalDetails"]);
+                $('#addEditForm #ProgramLink').val(oTable.fnGetData(pos[0])["ProgramLink"]);
+
+                var timing = getTimingInfo(oTable.fnGetData(pos[0])["ManagedProgramTiming"], oTable.fnGetData(pos[0])["ManagedTimingUnitID"]);
+                $('#addEditForm #ManagedProgramTiming').val(data.programTiming);
+                $('#addEditForm #ManagedTimingUnitItems').multiselect('select', data.timingUnit);
+
+                timing = getTimingInfo(oTable.fnGetData(pos[0])["FranchisedProgramTiming"], oTable.fnGetData(pos[0])["FranchisedTimingUnitID"]);
+                $('#addEditForm #FranchisedProgramTiming').val(data.programTiming);
+                $('#addEditForm #FranchisedTimingUnitItems').multiselect('select', data.timingUnit);
+
+                var mfType = oTable.fnGetData(pos[0])["LocationTypeID"];
+                $('#addEditForm #MFTypeID[value=' + mfType + ']').prop('checked', true);
+                showHideMFType(mfType);
+
+                $('#addEditCourseDialog .modal-title').text('Edit Course');
+                $('#addEditButton').text('Update');
+
+                // load course dropdown selections
+                deselectAddEditDropdowns();
+
+                var items = [],
+                   result = [],
+                   continents = [],
+                   brands = [],
+                   levelWorkareas = [],
+                   functions = [];
+
+                $.when(
+                    // get async data
+                    items = loadCourseMapping(programID)
+                ).then(function () {
+                    // wait then select assigned areas in dropdowns
+                    if (items !== null) {
+                        result = items.responseJSON;
+                        if (!result.success) {
+                            $('.popup-loading-image').hide();
+                            $('#addEditButton').show();
+                            showAddEditValidation('error', result.message);
+                            return false;
+                        }
+
+                        continents = result.data.ContinentIDs;
+                        brands = result.data.BrandIDs;
+                        levelWorkareas = result.data.LevelWorkareaList;
+                        functions = result.data.FunctionIDs;
+                    }
+
+                    if (continents !== null) {
+                        $.each(continents, (function (i, item) {
+                            $('#addEditContinentItems').multiselect('select', item);
+                        }));
+                    }
+                    if (brands !== null) {
+                        $.each(brands, (function (i, item) {
+                            $('#addEditBrandItems').multiselect('select', item);
+                        }));
+                    }
+                    if (levelWorkareas !== null) {
+                        $.each(levelWorkareas, (function (i, item) {
+                            $('#addEditLevelWorkareaItems').multiselect('select', item.LevelID);
+                            $('#addEditLevelWorkareaItems').multiselect('select', item.LevelID + "|" + item.WorkareaID + "|" + item.WorkareaType);
+                        }));
+                    }
+                    if (functions !== null) {
+                        $.each(functions, (function (i, item) {
+                            $('#addEditFunctionItems').multiselect('select', item);
+                        }));
+                    }
+                    showHideFunctions();
+                });
+
+                $('.popup-loading-image').hide();
+                $('#addEditButton').show();
+                $('#addEditCourseDialog').modal('show');
+            });
+
+            // Delete
+            $('#coursesGrid').on('click', 'button.editor_delete', function (e) {
+                action = "delete";  //delete/archive
+                e.preventDefault();
+                $('#deleteForm input').clearErrors();
+
+                var oTable = $('#coursesGrid').dataTable();
+                var row = $(this).parents("td")[0];
+                var pos = oTable.fnGetPosition(row);
+                $('#deleteForm #ProgramID').val(oTable.fnGetData(pos[0])["ProgramID"]);
+                $('#deleteForm #Archived').val(oTable.fnGetData(pos[0])["Archived"]);
+
+                $('#deleteCourseDialog .modal-title').text('Delete Course');
+                var message = "Are you sure you want to delete the selected course?  This will remove it entirely, including all associations and historical data.";
+                var buttonText = "Delete";
+                if (oTable.fnGetData(pos[0])["HasDependencies"] === true) {
+                    action = 'archive';
+                    message = 'The selected Program has data associated with it and cannot be deleted.  It will be archived instead and not visible to users.';
+                    $('#deleteForm #Archived').val(true);
+                    buttonText = "Archive";
+                }
+                $('#deleteMessage').text(message);
+                $('#deleteButton').text(buttonText);
+                $('#deleteCourseDialog').modal('show');
+            });
+
+            // Unarchive
+            $('#coursesGrid').on('click', 'button.editor_unarchive', function (e) {
+                action = "unarchive";
+                e.preventDefault();
+                $('#deleteForm input').clearErrors();
+
+                var oTable = $('#coursesGrid').dataTable();
+                var row = $(this).parents("td")[0];
+                var pos = oTable.fnGetPosition(row);
+                $('#deleteForm #ProgramID').val(oTable.fnGetData(pos[0])["ProgramID"]);
+                $('#deleteForm #Archived').val(false);
+
+                $('#deleteCourseDialog .modal-title').text('Unarchive Course');
+                var message = 'Unarchive the Course so it will be visible to users?';
+
+                $('#deleteMessage').text(message);
+                $('#deleteButton').text('Unarchive');
+                $('#deleteCourseDialog').modal('show');
+            });
+
+            $('button#addEditButton').click(function () {
+                editorSaveUpdate('#addEditForm', '#addEditCourseDialog');
+                return false;
+            });
+
+            $('button#deleteButton').click(function () {
+                editorSaveUpdate('#deleteForm', '#deleteCourseDialog');
+                return false;
+            });
+        });
+
+        // get dialog timing data
+        function getTimingInfo(timing, group) {
+            switch (timing) {
+                case 0:
+                case -1:
+                case 365:
+                    group = timing;
+                    timing = null;
+                    break;
+            }
+            return data = {
+                programTiming: timing,
+                timingUnit: (group === null) ? 0 : group
+            };
+        }
+
+        function loadGrid() {
+            // Load grid data
+            $('#validationSuccess').hide();
+            $('#validationError').hide();
+            var form = $('#reportForm');
+            $('#gridLoadingImage').show();
+            $.ajax({
+                type: 'POST',
+                url: form.attr('action'),
+                data: form.serialize(),
+                success: function (result) {
+                    $('.popup-loading-image').hide();
+                    if (result.success) {
+                        var oTable = $('#coursesGrid').DataTable();
+                        oTable.clear().draw();
+                        oTable.rows.add(result.data).draw();
+                        $('#gridContainer').css('visibility', 'visible');
+                    }
+                    else if (result.error) {
+                        $('.popup-loading-image').hide();
+                        showValidation('error', result.message);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    $('.popup-loading-image').hide();
+                    showValidation('error', '@ViewBag.LoadError');
+                }
+            });
+            return false;
+        }
+
+        function setupAddEditMultiselects() {
+            initMultiselect('ManagedTimingUnitItems');
+            initMultiselect('FranchisedTimingUnitItems');
+
+            initMultiselect('addEditContinentItems');
+            initMultiselect('addEditBrandItems');
+            initMultiselect('addEditLevelWorkareaItems');
+            initMultiselect('addEditFunctionItems');
+
+            // style levelWorkarea dropdown
+            $('#addEditLevelWorkareaItems').siblings('div').find('ul li').each(function (i, item) {
+                if ($(item).find('input').val().indexOf('|') > -1) {
+                    if (!$(item).hasClass('workarea-item')) {
+                        // workarea
+                        $(item).addClass('workarea-item');
+                    }
+                }
+                else if (!$(item).hasClass('multiselect-item') && !$(item).hasClass('level-item')) {
+                    // level
+                    $(item).addClass('level-item');
+                    //$(item).addClass('details-control');
+                }
+            });
+
+            // update valid functions
+            $('#addEditContinentItems').change(function () {
+                showHideFunctions();
+            });
+            $('#addEditBrandItems').change(function () {
+                showHideFunctions();
+            });
+            $('#addEditLevelWorkareaItems').change(function () {
+                showHideFunctions();
+            });
+
+            $('.dropdown-div').show();
+        }
+
+        function deselectAddEditDropdowns() {
+            // deselect all
+            $('#addEditContinentItems option').each(function () {
+                $('#addEditContinentItems').multiselect('deselect', $(this).val());
+            });
+
+            $('#addEditBrandItems option').each(function () {
+                $('#addEditBrandItems').multiselect('deselect', $(this).val());
+            });
+
+            $('#addEditLevelWorkareaItems option').each(function () {
+                $('#addEditLevelWorkareaItems').multiselect('deselect', $(this).val());
+            });
+
+            $('#addEditFunctionItems option').each(function () {
+                $('#addEditFunctionItems').multiselect('deselect', $(this).val());
+            });
+
+            $('ul.multiselect-container').scrollTop(0);
+        }
+
+        function showHideMFType(mfTypeID) {
+            // show addEdit dialog MFType
+            mfTypeID = Number(mfTypeID);
+            switch (mfTypeID) {
+                case 1:
+                    $('#managedTiming').show();
+                    $('#franchisedTiming').hide();
+                    break;
+                case 2:
+                    $('#managedTiming').hide();
+                    $('#franchisedTiming').show();
+                    break;
+                case 0:
+                    $('#managedTiming').show();
+                    $('#franchisedTiming').show();
+                    break;
+            }
+        }
+
+        // Load course/program mapping data
+        function loadCourseMapping(programID) {
+            return $.ajax({
+                type: 'POST',
+                url: '@Url.Action("GetCourseMapping", "Courses", new { area = "Admin" })',
+                data: { programId: programID }
+            });
+        }
+
+        // show dialog success/error
+        function showAddEditValidation(type, message) {
+            switch (type) {
+                case "success":
+                    $('#addEditValidationError').hide();
+                    $('#addEditValidationSuccess .message').html(message);
+                    $('#addEditValidationSuccess').show();
+                    break;
+                case "error":
+                    $('#addEditValidationSuccess').hide();
+                    $('#addEditValidationError .message').html(message);
+                    $('#addEditValidationError').show();
+                    break;
+            }
+        }
+
+        // show functions based on selections
+        function showHideFunctions() {
+            if ($('#addEditContinentItems').val() === null || $('#addEditBrandItems').val() === null || $('#addEditLevelWorkareaItems').val() === null) {
+                // deselect then hide all functions
+                $('#addEditFunctionItems option').each(function () {
+                    $('#addEditFunctionItems').multiselect('deselect', $(this).val());
+                });
+                $('#addEditFunctionItems').siblings('div').find('ul li').each(function (i, item) {
+                    $(item).hide();
+                });
+                return false;
+            }
+
+            var continents = $('#addEditContinentItems').val();
+            var brands = $('#addEditBrandItems').val();
+            var levels = $('#addEditLevelWorkareaItems').val().filter(function (item) {
+                return item.indexOf('|') === -1;
+            });;
+            
+            if (levels === null || levels.length === 0) {
+                return false;
+            }
+
+            $('#addEditLoadingImage').show();
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("GetFunctionsByCategory", "Courses", new { area = "Admin" })',
+                data: {
+                    continentIDs: continents,
+                    brandIDs: brands,
+                    levelIDs: levels
+                },
+                success: function (result) {
+                    if (result.success) {
+                        $('#addEditFunctionItems').siblings('div').find('ul li').each(function (i, item) {
+                            // show functions in returned list
+                            var id = $(item).find('input').val();
+                            if (result.data.indexOf(Number(id)) > -1) {
+                                $(item).show();
+                            }
+                            //else if (!$(item).hasClass('multiselect-all')) {
+                            //}
+                            else {
+                                $('#addEditFunctionItems').multiselect('deselect', id);
+                                $(item).hide();
+                            }
+                        });
+                        $('#addEditLoadingImage').hide();
+
+                    }
+                    else if (result.error) {
+                        //showAddEditValidation('error', result.message);
+                        $('#addEditLoadingImage').hide();
+                    }
+                }
+            });
+        }
+
+        // add/edit/delete from dialog, update grid data, show validation
+        function editorSaveUpdate(formId, dialogId) {
+            var form = $(formId);
+            disableDialogButton(dialogId, true);
+            if (dialogId.indexOf("addEdit") >= 0) {
+                $('#addEditLoadingImage').show();
+            }
+            else if (dialogId.indexOf("delete") >= 0) {
+                $('#deleteLoadingImage').show();
+            }
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("SaveCourseChanges", "Courses", new { area = "Admin" })',
+                data: form.serialize() + '&action=' + action,
+                success: function (result) {
+                    resetDialog(dialogId);
+                    if (result.success) {
+                        if ($('#coursesGrid').css('visibility') === 'visible') {
+                            loadGrid();
+                        }
+                        $(dialogId).modal('hide');
+                        showValidation('success', result.message);
+                    }
+                    else if (result.error) {
+                        showAddEditValidation('error', result.message);
+                    }
+                    else if (dialogId.indexOf('delete') === -1) {
+                        showAddEditValidation('error', result.message);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    resetDialog(dialogId);
+                    showAddEditValidation('error', '@ViewBag.LoadError');
+                }
+            });
+        }
+
+    </script>
+}

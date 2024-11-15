@@ -1,0 +1,347 @@
+﻿@model MILearningPlan.ViewModels.Admin.AllWorkareasViewModel
+
+@{
+    ViewBag.Title = "Manage Primary Work Areas";
+}
+
+@section styles {
+    <link href="~/css/Admin/ManageWorkareas.css" rel="stylesheet" />
+}
+
+<div class="row admin-spacing">
+    <div class="col-sm-12">
+        <div class="row">
+            <div class="col-sm-2">
+                Associated Type:
+            </div>
+            <div class="col-sm-6">
+                <select id="levelItems" class="form-control">
+                </select>
+            </div>
+        </div>
+    </div>
+    </div>
+
+<div class="row admin-spacing">
+    <div class="col-xs-12">
+        <table id="workareasGrid" class="dataTable">
+            <thead>
+                <tr>
+                    <th>ID
+                    <th>Dependencies
+                    <th>Work Area
+                    <th class="column-centered column-small">Type
+                    <th class="column-centered column-small">Archived
+                    <th class="column-centered column-small"><button id="addWorkarea" class="btn btn-md btn-raised btn-default add-button">Add Workarea</button>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+<div id="addEditJobAreaDialog" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" title="Cancel">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                @Html.Partial("_AddEditWorkarea")
+            </div>
+            <div class="modal-footer">
+                <img class="popup-loading-image" src="~/images/loading2.gif" />
+                <button id="addEditButton" class="btn btn-raised btn-primary">Update</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteJobAreaDialog" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" title="Cancel">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <form id="deleteForm">
+                    @Html.Hidden("Workarea.WorkareaID")
+                    @Html.Hidden("Workarea.Archived")
+                    @Html.Hidden("Workarea.WorkareaType")
+                    @Html.Hidden("Workarea.WorkareaName")
+                </form>
+                <div id="deleteMessage"></div>
+            </div>
+            <div class="modal-footer">
+                <img class="popup-loading-image" src="~/images/loading2.gif" />
+                <button id="deleteButton" class="btn btn-raised btn-primary">Delete</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var action = "",
+            workareaType = "";
+
+        $(function () {
+
+            showValidation('success', "Select an Associated Type to display its related Work Areas. A \"Work Area\" Type designates non-managed levels, while \"Management Role\" designates managed.");
+
+            initMultiselect('Workarea_WorkareaType');
+
+            // Load grid
+            $('#workareasGrid').DataTable({
+                paging: true,
+                pagingType: "numbers",
+                searching: false,
+                ordering: false,
+                info: true,
+                dom: 'Blfr<t><ip>',
+                sAjaxDataProp: "WorkareaList",
+                ajax: {
+                    url: "@Url.Action("GetWorkareas", "JobAreas", new { area = "Admin" })",
+                    data: function (d) {
+                        d.level = $('#levelItems').val()
+                    },
+                    dataType: "json",
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        showValidation('error', '@ViewBag.LoadError');
+                    }
+                },
+                columns: [
+                    { data: "WorkareaID", visible: false },
+                    { data: "HasDependencies", visible: false },
+                    { data: "WorkareaName" },
+                    { data: "WorkareaType", className: "dt-center", },
+                    {
+                        data: "Archived", className: "dt-center",
+                        render: function (val, type, row) {
+                            return (val === true) ? "<span>&#10004;</span>" : "";
+                        }
+                    },
+                    {
+                        data: null,
+                        className: "dt-center",
+                        render: function (data) {
+                            var buttons = '<button class="editor_edit btn btn-raised btn-default">Edit</button>';
+                            if (data.Archived) {
+                                buttons += '&nbsp; <button class="editor_unarchive btn btn-raised btn-default">Unarchive</button>';
+                            }
+                            else {
+                                buttons += '&nbsp; <button class="editor_delete btn btn-raised btn-default">Delete</button>';
+                            }
+                            return buttons;
+                        }
+                    }
+                ],
+                language: {
+                    emptyTable: "(No Workareas were found)"
+                },
+                //select: "single",
+                buttons: [{
+                    extend: 'excel',
+                    text: '<span class="export-excel-button"></span>',
+                    titleAttr: 'Export to Excel',
+                    exportOptions: {
+                        columns: [2, 3, 4]
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<span class="export-pdf-button"></span>',
+                    titleAttr: 'Export to PDF',
+                    exportOptions: {
+                        columns: [2, 3, 4]
+                    }
+                }],
+                "fnDrawCallback": function (data) {
+                    var rowsPerPage = this.fnSettings()._iDisplayLength;
+                    var rowsToShow = this.fnSettings().fnRecordsDisplay();
+                    if (rowsToShow <= rowsPerPage || rowsPerPage == -1) {
+                        // hide pager if only 1 page
+                        $('.dataTables_paginate').css('visibility', 'hidden');
+                    }
+                    else {
+                        $('.dataTables_paginate').css('visibility', 'visible');
+                    }
+
+                    // build level select on first load
+                    if (data.json !== undefined) {
+                        if ($('#levelItems > option').length === 0) {
+                            var items = data.json.LevelList;
+
+                            $.each(items, function (i, item) {
+                                var opt = $('<option />').attr('value', item.LevelID).text(item.LevelName);
+                                $('#levelItems').append(opt);
+                            });
+                        }
+
+                        initMultiselect('levelItems');
+                    }
+                }
+
+            });
+
+            $('#levelItems').change(function () {
+                var oTable = $('#workareasGrid').DataTable();
+                oTable.ajax.reload(null, false);
+            });
+
+            // Add
+            $('button#addWorkarea').on('click', function (e) {
+                action = "add";
+                e.preventDefault();
+                $('#addEditForm input').clearErrors();
+
+                //$('#addEditForm #levelLabel').text($('#levelItems option:selected').text());
+                //$('#addEditForm #LevelName').val($('#levelItems').val());
+                $('#addEditForm #workareaSelectDiv').show();
+                $('#addEditForm #workareaLabelDiv').hide();
+                $('#addEditForm #Workarea_WorkareaName').val('');
+
+                $('#addEditJobAreaDialog .modal-title').text('Add New Work Area');
+                $('button#addEditButton').text('Add');
+                $('#addEditJobAreaDialog').modal('show');
+            });
+
+            // Edit
+            $('#workareasGrid').on('click', 'button.editor_edit', function (e) {
+                action = "edit";
+                e.preventDefault();
+                $('#addEditForm input').clearErrors();
+
+                var oTable = $('#workareasGrid').dataTable();
+                var row = $(this).parents("td")[0];
+                var pos = oTable.fnGetPosition(row);
+                $('#addEditForm #Workarea_WorkareaID').val(oTable.fnGetData(pos[0])["WorkareaID"]);
+                $('#addEditForm #Workarea_Archived').val(oTable.fnGetData(pos[0])["Archived"]);
+                //$('#addEditForm #levelLabel').text($('#levelItems option:selected').text());
+                //$('#addEditForm #LevelName').val($('#levelItems').val());
+                $('#addEditForm #workareaSelectDiv').hide();
+                $('#addEditForm #workareaLabelDiv').show();
+                workareaType = oTable.fnGetData(pos[0])["WorkareaType"];
+                $('#addEditForm #workareaLabel').text(workareaType);
+                $('#addEditForm #Workarea_WorkareaType').val(workareaType);
+                $('#addEditForm #Workarea_WorkareaName').val(oTable.fnGetData(pos[0])["WorkareaName"]);
+
+                $('#addEditJobAreaDialog .modal-title').text('Edit Work Area');
+                $('button#addEditButton').text('Update');
+                $('#addEditJobAreaDialog').modal('show');
+            });
+
+            // Delete/Archive
+            $('#workareasGrid').on('click', 'button.editor_delete', function (e) {
+                action = "delete";  //delete/archive
+                e.preventDefault();
+                $('#deleteForm input').clearErrors();
+
+                var oTable = $('#workareasGrid').dataTable();
+                var row = $(this).parents("td")[0];
+                var pos = oTable.fnGetPosition(row);
+                $('#deleteForm #Workarea_WorkareaID').val(oTable.fnGetData(pos[0])["WorkareaID"]);
+                $('#deleteForm #Workarea_Archived').val(oTable.fnGetData(pos[0])["Archived"]);
+                $('#deleteForm #Workarea_WorkareaType').val(oTable.fnGetData(pos[0])["WorkareaType"]);
+                $('#deleteForm #Workarea_WorkareaName').val(oTable.fnGetData(pos[0])["WorkareaName"]);
+
+                $('#deleteJobAreaDialog .modal-title').text('Delete Work Area');
+                var message = 'Are you sure you want to delete the selected Work Area?';
+                var buttonText = "Delete";
+                if (oTable.fnGetData(pos[0])["HasDependencies"] === true) {
+                    action = 'archive';
+                    message = 'The selected Work Area has data associated with it and cannot be deleted.  It will be archived instead and not visible to users.';
+                    $('#deleteForm #Workarea_Archived').val(true);
+                    buttonText = "Archive";
+                }
+                $('#deleteMessage').text(message);
+                $('button#deleteButton').text(buttonText);
+                $('#deleteJobAreaDialog').modal('show');
+            });
+
+            // Unarchive
+            $('#workareasGrid').on('click', 'button.editor_unarchive', function (e) {
+                action = "unarchive";
+                e.preventDefault();
+                $('#deleteForm input').clearErrors();
+
+                var oTable = $('#workareasGrid').dataTable();
+                var row = $(this).parents("td")[0];
+                var pos = oTable.fnGetPosition(row);
+                $('#deleteForm #Workarea_WorkareaID').val(oTable.fnGetData(pos[0])["WorkareaID"]);
+                $('#deleteForm #Workarea_Archived').val(false);
+                $('#deleteForm #Workarea_WorkareaType').val(oTable.fnGetData(pos[0])["WorkareaType"]);
+                $('#deleteForm #Workarea_WorkareaName').val(oTable.fnGetData(pos[0])["WorkareaName"]);
+
+                $('#deleteJobAreaDialog .modal-title').text('Unarchive Workarea');
+                var message = 'Unarchive the Workarea so it will be visible to users?';
+
+                $('#deleteMessage').text(message);
+                $('button#deleteButton').text('Unarchive');
+                $('#deleteJobAreaDialog').modal('show');
+            });
+
+            $('button#addEditButton').click(function (e) {
+                editorUpdateGrid('#addEditForm', '#addEditJobAreaDialog');
+                return false;
+            });
+
+            $('button#deleteButton').click(function (e) {
+                editorUpdateGrid('#deleteForm', '#deleteJobAreaDialog');
+                return false;
+            });
+
+            // add/edit/delete grid data and show validation after editor confirm
+            function editorUpdateGrid(formId, dialogId) {
+                var form = $(formId);
+                disableDialogButton(dialogId, true);
+                $('.popup-loading-image').show();
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("SaveWorkareaChanges", "JobAreas", new { area = "Admin" })',
+                    data: form.serialize() + '&action=' + action,
+                    success: function (result) {
+                        resetDialog(dialogId);
+                        if (result.success) {
+                            $(dialogId).modal('hide');
+                            var oTable = $('#workareasGrid').DataTable();
+                            oTable.ajax.reload(null, false);
+                            showValidation('success', result.message);
+                        }
+                        else if (result.error) {
+                            $(dialogId).modal('hide');
+                            showValidation('error', result.message);
+                        }
+                        else if (dialogId.indexOf('delete') === -1) {
+                            // Update form with partial for ModelState errors
+                            form.html(result);
+                            //$('#addEditForm #levelLabel').text($('#levelItems option:selected').text());
+                            if (action == 'add') {
+                                $('#addEditForm #workareaSelectDiv').show();
+                                initMultiselect('Workarea_WorkareaType');
+                                $('#addEditForm #workareaLabelDiv').hide();
+                            }
+                            else if (action == 'edit') {
+                                $('#addEditForm #workareaSelectDiv').hide();
+                                $('#addEditForm #workareaLabelDiv').show();
+                                $('#addEditForm #workareaLabel').text(workareaType);
+                                //$('#addEditForm #Workarea_WorkareaType').val(workareaType);
+                            }
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        resetDialog(dialogId);
+                        $(dialogId).modal('hide');
+                        showValidation('error', '@ViewBag.LoadError');
+                    }
+                });
+            }
+
+        });
+    </script>
+}

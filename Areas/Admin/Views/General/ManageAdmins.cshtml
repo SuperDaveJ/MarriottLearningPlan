@@ -1,0 +1,187 @@
+﻿@model MILearningPlan.ViewModels.Home.UserViewModel
+
+@{
+    ViewBag.Title = "Manage Administrators";
+}
+
+@section styles {
+    <link href="~/css/Admin/ManageAdmins.css" rel="stylesheet" />
+}
+
+<div class="admin-spacing">
+    <div class="row">
+        <div class="col-xs-12">
+            <table id="usersGrid" class="dataTable">
+                <thead>
+                    <tr>
+                        <th>ID
+                        <th>EID
+                        <th class="column-centered column-small">Administrator
+                        <th class="column-centered column-small">
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="addEditUserDialog" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" title="Cancel">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                @Html.Partial("_EditAdminUser")
+            </div>
+            <div class="modal-footer">
+                <img class="popup-loading-image" src="~/images/loading2.gif" />
+                <button id="addEditButton" class="btn btn-raised btn-primary">Update</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var action = "";
+
+        $(function () {
+
+            showValidation('success', "All users are listed below.  Click a column heading to sort by it.  Edit a user to add/remove admin rights.");
+
+            // Load grid
+            $('#usersGrid').DataTable({
+                paging: true,
+                pagingType: "numbers",
+                searching: true,
+                ordering: true,
+                info: true,
+                dom: 'Blfr<t><ip>',
+                sAjaxDataProp: "",
+                ajax: {
+                    url: "@Url.Action("GetUsers", "General", new { area = "Admin" })",
+                    dataType: "json",
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        showValidation('error', '@ViewBag.LoadError');
+                    }
+                },
+                columns: [
+                    { data: "UserID", visible: false },
+                    { data: "EID" },
+                    {
+                        data: "IsAdmin",
+                        className: "dt-center",
+                        render: function (val, type, row) {
+                            return (val === true) ? "<span>&#10004;</span>" : "";
+                        }
+                    },
+                    {
+                        data: null,
+                        className: "dt-center",
+                        render: function (data) {
+                            return '<button class="editor_edit btn btn-raised btn-default">Edit</button>';
+                        }
+                    }
+                ],
+                order: [[1, 'asc']],  // sort by EID
+                language: {
+                    emptyTable: "(No Users were found)"
+                },
+                buttons: [{
+                    extend: 'excel',
+                    text: '<span class="export-excel-button"></span>',
+                    titleAttr: 'Export to Excel',
+                    exportOptions: {
+                        columns: [1,2]
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<span class="export-pdf-button"></span>',
+                    titleAttr: 'Export to PDF',
+                    exportOptions: {
+                        columns: [1,2]
+                    }
+                }],
+                "fnDrawCallback": function () {
+                    var rowsPerPage = this.fnSettings()._iDisplayLength;
+                    var rowsToShow = this.fnSettings().fnRecordsDisplay();
+                    if (rowsToShow <= rowsPerPage || rowsPerPage == -1) {
+                        // hide pager if only 1 page
+                        $('.dataTables_paginate').css('visibility', 'hidden');
+                    }
+                    else {
+                        $('.dataTables_paginate').css('visibility', 'visible');
+                    }
+                }
+            });
+
+            $('.dataTables_filter label input').addClass('form-control');
+
+            // Edit
+            $('#usersGrid').on('click', 'button.editor_edit', function (e) {
+                action = "edit";
+                e.preventDefault();
+                $('#addEditForm input').clearErrors();
+
+                var oTable = $('#usersGrid').dataTable();
+                var row = $(this).parents("td")[0];
+                var pos = oTable.fnGetPosition(row);
+                $('#addEditForm #UserID').val(oTable.fnGetData(pos[0])["UserID"]);
+                $('#addEditForm #EIDLabel').text(oTable.fnGetData(pos[0])["EID"]);
+                //$('#addEditForm #userNameLabel').text(oTable.fnGetData(pos[0])["FirstName"] + ' ' + oTable.fnGetData(pos[0])["LastName"]);
+                $('#addEditForm #IsAdminLabel.btn').toggleClass('active', oTable.fnGetData(pos[0])["IsAdmin"]);
+
+                $('#addEditUserDialog .modal-title').text('Edit User');
+                $('button#addEditButton').text('Update');
+                $('#addEditUserDialog').modal('show');
+            });
+
+            $('button#addEditButton').click(function (e) {
+                $('#addEditForm #IsAdmin').val($('#addEditForm #IsAdminLabel.btn').attr('active') !== 'undefined');
+                editorUpdateGrid('#addEditForm', '#addEditUserDialog');
+                return false;
+            });
+
+            // add/edit/delete grid data and show validation after editor confirm
+            function editorUpdateGrid(formId, dialogId) {
+                var form = $(formId);
+                disableDialogButton(dialogId, true);
+                $('.popup-loading-image').show();
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("SaveAdminUserChanges", "General", new { area = "Admin" })',
+                    data: form.serialize(),
+                    success: function (result) {
+                        resetDialog(dialogId);
+                        if (result.success) {
+                            $(dialogId).modal('hide');
+                            var oTable = $('#usersGrid').DataTable();
+                            oTable.ajax.reload(null, false);
+                            showValidation('success', result.message);
+                        }
+                        else if (result.error) {
+                            $(dialogId).modal('hide');
+                            showValidation('error', result.message);
+                        }
+                        else if (dialogId.indexOf('delete') === -1) {
+                            // Update form with partial for ModelState errors
+                            form.html(result);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        resetDialog(dialogId);
+                        $(dialogId).modal('hide');
+                        showValidation('error', '@ViewBag.LoadError');
+                    }
+                });
+            }
+
+        });
+    </script>
+}
+

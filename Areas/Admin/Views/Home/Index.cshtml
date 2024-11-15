@@ -1,0 +1,91 @@
+﻿@{
+    ViewBag.Title = "Admin Home";
+}
+
+@section styles {
+    <link href="~/css/Admin/Index.css" rel="stylesheet" />
+}
+
+<div class="row admin-spacing">
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-4 col-md-offset-1">
+                <div class="row">
+                    <fieldset>
+                        <legend>General</legend>
+                        <div>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("EditHelpPage", "General", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-question-sign"></span> Help Page Content
+                            </a>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("ManageAdmins", "General", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-lock"></span> Manage Administrators
+                            </a>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("TestEmail", "General", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-envelope"></span> Send Test Email
+                            </a>
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="row">
+                    <fieldset>
+                        <legend>Job Areas</legend>
+                        <div>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("ManageContinents", "JobAreas", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-globe"></span> Manage Continents
+                            </a>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("ManageBrands", "JobAreas", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-equalizer"></span> Manage Brands
+                            </a>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("ManageLevels", "JobAreas", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-user"></span> Manage Levels
+                            </a>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("ManageWorkareas", "JobAreas", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-briefcase"></span> Manage Primary Work Areas
+                            </a>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("ManageFunctions", "JobAreas", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-cog"></span> Manage Role-Specific Functions
+                            </a>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+            <div class="col-md-4 col-md-offset-2">
+                <div class="row">
+                    <fieldset>
+                        <legend>Reports</legend>
+                        <div>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("UserLogonReport", "Reports", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-list-alt"></span> User Plans
+                            </a>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("UsageReport", "Reports", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-list-alt"></span> Usage
+                            </a>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("CourseCountReport", "Reports", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-list-alt"></span> Count of Courses by EID
+                            </a>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("CourseListReport", "Reports", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-list-alt"></span> List of Courses by EID
+                            </a>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("AssociationsReport", "Reports", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-list-alt"></span> Associations
+                            </a>
+                            @*<a class="btn btn-lg btn-default" href="@Url.Action("Index", "Home", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-list-alt"></span> Link Verifier
+                            </a>*@
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="row">
+                    <fieldset>
+                        <legend>Courses</legend>
+                        <div>
+                            <a class="btn btn-lg btn-default" href="@Url.Action("ManageCourses", "Courses", new { area = "Admin" }, null)">
+                                <span class="glyphicon glyphicon-blackboard"></span> Manage Courses
+                            </a>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

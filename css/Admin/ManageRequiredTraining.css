@@ -1,0 +1,80 @@
+﻿
+/* Admin - Manage Required Training */
+
+label.control-label {
+    font-weight: 400;
+}
+
+.dropdown-div {
+    display: none;
+}
+
+select.form-control {
+    padding: 4px 8px;
+    font-size: 1em;
+}
+
+#gridContainer {
+    visibility: hidden;
+}
+
+#coursesGrid th,
+#coursesGrid td {
+    font-size: 0.9em;
+}
+
+
+/* addEdit dialog */
+ 
+#addEditValidationSuccess,
+#addEditValidationError {
+    display: none;
+}
+
+.modal-dialog {
+    margin: 100px auto;
+}
+
+#managedTiming,
+#franchisedTiming {
+    display: none;
+}
+
+fieldset legend {
+    font-size: 1em;
+    color: #999;
+    border-bottom: 1px solid #ccc;
+}
+
+.tooltip {
+    font-size: 0.875em !important;
+}
+
+.tooltip > .tooltip-inner {
+    background-color: #656565 !important;
+    color: #fff !important;
+    /*line-height: 150% !important;*/
+    /*padding: 10px !important;*/
+    min-width: 250px;
+}
+
+li.level-item a label {
+    font-weight: bold !important;
+}
+
+li.workarea-item a {
+    padding-left: 30px !important;
+    /*display: none;*/
+}
+
+.details-control {
+    display: inline-block;
+    background: url('../../images/plus.png') no-repeat 0 center;
+    cursor: pointer;
+    width: 16px;
+    padding: 0 4px 0 0 !important;
+}
+.shown .details-control {
+    background: url('../../images/minus.png') no-repeat 0 center;
+    width: 16px;
+}

@@ -1,0 +1,11 @@
+﻿
+/* Admin - Manage Functions */
+
+.form-control {
+    font-size: 0.95em;
+    height: auto;
+}
+
+#refreshDialog {
+    display: inline-block;
+}

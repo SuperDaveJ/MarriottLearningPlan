@@ -1,0 +1,39 @@
+﻿@model MILearningPlan.ViewModels.Home.UserViewModel
+
+<form id="addEditForm">
+    <div class="row">
+        <div class="col-sm-12">
+            @*<div class="row">
+                <div class="col-sm-4">Name:</div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        <label id="userNameLabel"></label>
+                    </div>
+                </div>
+            </div>*@
+            <div class="row">
+                <div class="col-sm-4">EID:</div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        <label id="EIDLabel"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-4">Administrator:</div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        @Html.Hidden("UserID")
+                        @*@Html.Hidden("IsAdmin")*@
+                        <div class="btn-group" data-toggle="buttons">
+                            <label id="IsAdminLabel" class="btn btn-default">
+                                <input id="IsAdmin" name="IsAdmin" type="checkbox" autocomplete="off">
+                                <span class="glyphicon glyphicon-ok"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

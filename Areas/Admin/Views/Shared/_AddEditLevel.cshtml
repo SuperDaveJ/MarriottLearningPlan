@@ -1,0 +1,19 @@
+﻿@model MILearningPlan.ViewModels.Admin.AllLevelsViewModel
+
+<form id="addEditForm">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="row">
+                <div class="col-sm-4">Level Name:</div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        @Html.Hidden("Level.LevelID")
+                        @Html.Hidden("Level.Archived")
+                        @Html.TextBoxFor(x => x.Level.LevelName, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(x => x.Level.LevelName)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

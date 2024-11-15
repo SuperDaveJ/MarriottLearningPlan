@@ -1,0 +1,66 @@
+﻿
+@model MILearningPlan.ViewModels.Admin.HelpViewModel
+
+@{
+    ViewBag.Title = "Help Page Content";
+}
+
+@section styles {
+    <link href="~/css/Admin/EditHelpPage.css" rel="stylesheet" />
+}
+
+@Html.Partial("_Editor")
+
+@using (Html.BeginForm("UpdateHelpPage", "General", new { area = "Admin" }, FormMethod.Post, new { id = "editHelpForm" }))
+{
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="HelpText" name="HelpText" value='@Html.Raw(Model.HelpText)' />
+}
+ 
+<div id="buttonDiv" class="footer-div text-center">
+    <button id="submitButton" class="btn btn-md btn-raised btn-primary">Save Changes</button>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            $("#editor").wysiwyg();
+            $('.editor-outer .btn-group a').tooltip();
+
+            // htmlDecode if needed to load editor
+            $('#editor').html($('<div/>').html($('#HelpText').val()));
+
+            $('#submitButton').click(function () {
+                var tempHtml = $('#editor').html();
+                // htmlEncode to allow posting
+                var htmlContent = $("<div/>").text($($('<div/>').append(tempHtml)).html()).html();
+                $("#HelpText").val(htmlContent);
+
+                var form = $('#editHelpForm');
+                $.ajax({
+                    type: 'POST',
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function (result) {
+                        if (result.success) {
+                            showValidation('success', result.message);
+                        }
+                        else if (result.error) {
+                            var msg = result.message;
+                            if (msg.length > 1) {
+                                $.each(msg, function (i, item) {
+                                    msg[i] = $('<li/>').append(item);
+                                });
+                            }
+                            showValidation('error', msg);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        showValidation('error', '@ViewBag.LoadError');
+                    }
+                });
+            });
+        });
+
+    </script>
+}

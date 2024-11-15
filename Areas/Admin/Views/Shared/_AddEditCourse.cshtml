@@ -1,0 +1,226 @@
+﻿@using MILearningPlan.ViewModels.Admin
+@using MILearningPlan.ViewModels.LearningPlan
+@model AddEditCourseViewModel
+
+@{ 
+    var items = new List<SelectListItem>();
+}
+
+<div id="addEditValidationSuccess" class="alert alert-success fade in">
+    <a href="#" class="close" title="Cancel">&times;</a>
+    <div class="message"></div>
+</div>
+<div id="addEditValidationError" class="alert alert-danger fade in">
+    <a href="#" class="close" title="Cancel">&times;</a>
+    <div class="message"></div>
+</div>
+
+<form id="addEditForm">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="row">
+                @Html.HiddenFor(x => x.ProgramID)
+                <div class="col-sm-12">
+                    <div>Course Title:</div>
+                    <div class="form-group">
+                        @Html.TextBoxFor(x => x.ProgramTitle, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(x => x.ProgramTitle)
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div>Course Details:</div>
+                    <div class="form-group">
+                        @Html.TextAreaFor(x => x.ProgramAdditionalDetails, new { @rows = "4", @class = "form-control" })
+                        @Html.ValidationMessageFor(x => x.ProgramAdditionalDetails)
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div>Course URL or MGS Link:</div>
+                    <div class="form-group">
+                        @Html.TextAreaFor(x => x.ProgramLink, new { @rows = "4", @class = "form-control" })
+                        @Html.ValidationMessageFor(x => x.ProgramLink)
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-2">
+                    @{
+                        var mfTypes = (Dictionary<string, int?>)ViewData["MFTypes"];
+                        foreach (var item in mfTypes)
+                        {
+                            <div class="radio">
+                                <label>@Html.RadioButtonFor(m => m.MFTypeID, @item.Value, (item.Key == "Managed") ? new { @checked = "" } : null)@item.Key</label>
+                            </div>
+                        }
+                    }
+                </div>
+                <div id="managedTiming" class="col-sm-5">
+                    <fieldset>
+                        <legend>Managed</legend>
+                        <div class="col-sm-5">
+                            <div>Timing Value:</div>
+                            <div class="form-group">
+                                @Html.TextBoxFor(x => x.ManagedProgramTiming, new { @class = "form-control" })
+                                @Html.ValidationMessageFor(x => x.ManagedProgramTiming)
+                            </div>
+                        </div>
+                        <div class="col-sm-7">
+                            <div>
+                                Timing Group: &nbsp;
+                                <span data-toggle="tooltip" data-placement="top" title="A Timing Value is required for Days/Weeks/Months/Years, but not for the other Timing Groups which set the Timing Value internally.">
+                                    <img id="HGCHelp" src="~/images/help.png" />
+                                </span>
+                            </div>
+                            <div class="form-group">
+                                @{
+                                    items.Add(new SelectListItem() { Value = "0", Text = "Due Immediately" });
+                                    items.Add(new SelectListItem() { Value = "-1", Text = "As Needed" });
+
+                                    foreach (var item in (List<TimingUnitViewModel>)ViewData["TimingUnits"])
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.TimingUnitID.ToString(), Text = item.TimingUnit });
+                                    }
+
+                                    items.Add(new SelectListItem() { Value = "365", Text = "12+ Months" });
+                                }
+                                @Html.DropDownListFor(x => x.ManagedTimingUnitID, items, new { @id = "ManagedTimingUnitItems", @class = "form-control" })
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+                <div id="franchisedTiming" class="col-sm-5">
+                    <fieldset>
+                        <legend>Franchised</legend>
+                        <div class="col-sm-5">
+                            <div>Timing Value:</div>
+                            <div class="form-group">
+                                @Html.TextBoxFor(x => x.FranchisedProgramTiming, new { @class = "form-control" })
+                                @Html.ValidationMessageFor(x => x.FranchisedProgramTiming)
+                            </div>
+                        </div>
+                        <div class="col-sm-7">
+                            <div>
+                                Timing Group: &nbsp;
+                                <span data-toggle="tooltip" data-placement="top" title="A Timing Value is required for Days/Weeks/Months/Years, but not for the other Timing Groups which set the Timing Value internally.">
+                                    <img id="HGCHelp" src="~/images/help.png" />
+                                </span>
+                            </div>
+                            <div class="form-group">
+                                @{
+                                    items = new List<SelectListItem>();
+                                    items.Add(new SelectListItem() { Value = "0", Text = "Due Immediately" });
+                                    items.Add(new SelectListItem() { Value = "-1", Text = "As Needed" });
+
+                                    foreach (var item in (List<TimingUnitViewModel>)ViewData["TimingUnits"])
+                                    {
+                                        items.Add(new SelectListItem() { Value = item.TimingUnitID.ToString(), Text = item.TimingUnit });
+                                    }
+
+                                    items.Add(new SelectListItem() { Value = "365", Text = "12+ Months" });
+                                }
+                                @Html.DropDownListFor(x => x.FranchisedTimingUnitID, items, new { @id = "FranchisedTimingUnitItems", @class = "form-control" })
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+
+            <div class="admin-spacing">
+                <fieldset>
+                    <legend>Course Mapping</legend>
+                    <div class="row dropdown-div">
+                        <div class="col-sm-2 course-mapping-title">Continents:</div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                @{
+                                    items.Clear();
+                                    Model.ContinentList = (List<ContinentViewModel>)ViewData["ContinentList"];
+                                    if (Model.ContinentList != null)
+                                    {
+                                        foreach (var item in Model.ContinentList)
+                                        {
+                                            items.Add(new SelectListItem() { Value = item.ContinentID.ToString(), Text = item.ContinentName });
+                                        }
+                                    }
+                                    @Html.DropDownListFor(x => x.ContinentList, items, new { @id = "addEditContinentItems", @class = "form-control", @multiple = "multiple" })
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row dropdown-div">
+                        <div class="col-sm-2 course-mapping-title">Brands:</div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                @{
+                                    items.Clear();
+                                    Model.BrandList = (List<BrandViewModel>)ViewData["BrandList"];
+                                    if (Model.BrandList != null)
+                                    {
+                                        foreach (var item in Model.BrandList)
+                                        {
+                                            items.Add(new SelectListItem() { Value = item.BrandID.ToString(), Text = item.BrandName });
+                                        }
+                                    }
+                                    @Html.DropDownListFor(x => x.BrandList, items, new { @id = "addEditBrandItems", @class = "form-control", @multiple = "multiple" })
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row dropdown-div">
+                        <div class="col-sm-2 course-mapping-title">Levels/Work Areas:</div>
+                        <div class="col-sm-8">
+                            <div class="form-group">
+                                @{
+                                    items.Clear();
+                                    Model.LevelList = (List<LevelViewModel>)ViewData["LevelList"];
+                                    Model.WorkareaList = (List<WorkareaViewModel>)ViewData["WorkareaList"];
+                                    if (Model.LevelList != null && Model.WorkareaList != null)
+                                    {
+                                        foreach (var level in Model.LevelList)
+                                        {
+                                            items.Add(new SelectListItem() { Value = level.LevelID.ToString(), Text = level.LevelName });
+
+                                            foreach (var workarea in Model.WorkareaList)
+                                            {
+                                                if (level.LevelID == 1 || (level.LevelID > 1 && ! workarea.WorkareaType.ToLower().Contains("management")))
+                                                {
+                                                    items.Add(new SelectListItem() { Value = level.LevelID.ToString() + "|" + workarea.WorkareaID.ToString() + "|" + workarea.WorkareaType.Replace(" ",""), Text = workarea.WorkareaName });
+                                                }
+                                            }
+                                        }
+                                    }
+                                    @Html.DropDownListFor(x => x.WorkareaList, items, new { @id = "addEditLevelWorkareaItems", @class = "form-control", @multiple = "multiple" })
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row dropdown-div">
+                        <div class="col-sm-2 course-mapping-title">Functions:</div>
+                        <div class="col-sm-8">
+                            <div class="form-group">
+                                @{
+                                    items.Clear();
+                                    Model.FunctionList = (List<FunctionViewModel>)ViewData["FunctionList"];
+                                    if (Model.FunctionList != null)
+                                    {
+                                        foreach (var item in Model.FunctionList)
+                                        {
+                                            items.Add(new SelectListItem() { Value = item.FunctionID.ToString(), Text = item.FunctionName });
+                                        }
+                                    }
+                                    @Html.DropDownListFor(x => x.FunctionList, items, new { @id = "addEditFunctionItems", @class = "form-control", @multiple = "multiple" })
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+        </div>
+    </div>
+</form>

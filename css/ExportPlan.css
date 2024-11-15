@@ -1,0 +1,140 @@
+﻿
+/* Export Plan page */
+
+body {
+    /*font-size: 1em;*/
+    font-family: Helvetica, sans-serif;     /* evohtmltopdf only supports server-installed fonts */
+    color: #000;
+    background-color: #fff;
+}
+
+.container,
+.body-content {
+    margin: 0;
+    padding: 0;
+    width: auto;
+}
+
+.inner-content {
+    padding: 15px;
+    margin: 15px;
+}
+
+#header-area {
+    display: none;
+}
+
+#titleTopLeft {
+    width: 26%;
+    border-top: 2px solid #000;
+    border-left: 1px solid #000;
+    float: left;
+}
+
+#titleTopRight {
+    width: 74%;
+    border-top: 2px solid #000;
+    float: right;
+    padding-bottom: 10px;
+}
+
+.build-plan-spacing {
+    padding-top: 20px;
+}
+
+#myLearningPlan {
+    width: 100%;
+    color: #fff;
+    background-color: #000;
+    text-align: center;
+    font-weight: 700;
+    padding: 2px 0;
+}
+
+#nameDiv {
+    font-size: 3em;
+    font-weight: 700;
+    color: #000;
+    margin: 20px 0;
+    text-align: right;
+}
+
+#levelDiv,
+#workareaDiv {
+    font-size: 1.125em;
+    font-weight: 700;
+    color: #000;
+    text-align: right;
+}
+
+#brandDiv {
+    font-size: 1em;
+    font-weight: 700;
+    color: #000;
+    padding: 4px 0 0 15px;
+}
+
+#ownershipDiv,
+#continentDiv {
+    font-size: 1em;
+    color: #000;
+    padding-left: 15px;
+}
+
+#functionDiv {
+    font-size: 1.125em;
+    color: #000;
+    margin: 10px 0;
+    padding-left: 10px;
+    text-align: right;
+}
+
+#summaryTitle {
+    font-size: 1.375em;
+    color: #000;
+    margin: 10px 0;
+}
+
+#programsGrid {
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+    border-top: 2px solid #000;
+    border-bottom: 2px solid #000;
+}
+
+.build-plan-group-heading {
+    width: 26%;
+    font-size: 1.125em !important;
+    font-weight: 700;
+    color: #dd2529 !important;
+    text-transform: uppercase;
+    border-right: 1px solid #000;
+    vertical-align: top;
+    padding-top: 10px;
+}
+
+.heading-row {
+    border-top: 1px solid #000;
+}
+
+.build-plan-course {
+    font-size: 1.125em;
+    color: #000;
+    text-decoration: underline;
+    padding: 10px 0 0px 15px !important;
+    page-break-inside: avoid;
+}
+
+.build-plan-course a {
+    color: #000;
+}
+
+.expand-details-row {
+    padding: 0 0 8px 70px !important;
+    page-break-inside: avoid;
+}
+
+#dateCreated {
+    float: right;
+}

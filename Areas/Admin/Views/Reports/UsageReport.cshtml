@@ -1,0 +1,292 @@
+﻿@model MILearningPlan.ViewModels.Admin.UsageReportViewModel
+
+@{
+    ViewBag.Title = "Usage Report";
+}
+
+@section styles {
+    <link href="~/css/Admin/UsageReport.css" rel="stylesheet" />
+    <link href="~/css/Admin/datepicker-calendar.css" rel="stylesheet" />
+}
+
+<div class="row admin-spacing">
+    <div class="col-sm-12">
+        <div class="report-filters-title">Report Filters</div>
+        <hr />
+        @using (Html.BeginForm("GetUsageReport", "Reports", new { area = "Admin" }, FormMethod.Post, new { id = "reportForm" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+                <div class="col-sm-3">
+                    <div class="control-group">
+                        <label for="date-start" class="control-label">Start Date</label>
+                        <div class="controls">
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.StartDate, new { @id = "date-start", @class = "date-picker form-control" })
+                                <label for="date-start" class="input-group-addon btn">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <div class="control-group">
+                        <label for="date-end" class="control-label">End Date</label>
+                        <div class="controls">
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.EndDate, new { @id = "date-end", @class = "date-picker form-control" })
+                                <label for="date-end" class="input-group-addon btn">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row admin-spacing">
+                <div class="col-sm-3">
+                    @{
+                        foreach (var item in ViewBag.MFTypes)
+                        {
+                            <div class="radio">
+                                <label>@Html.RadioButtonFor(m => m.MFTypeID, (int?)item.Value, (item.Key == "Both") ? new { @checked = "" } : null)@item.Key</label>
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="row">
+                    <div class="col-sm-3">
+                        <label class="control-label">Category:</label>
+                        <div class="form-group">
+                            @{
+                                var list = new string[] {"Continent", "Brand", "Level", "Work Area", "Role Function" };
+                                var items = new List<SelectListItem>();
+                                foreach (var item in list)
+                                {
+                                    var valueID = item.Replace(" ", "");
+
+                                    if (valueID == "Level")
+                                    {
+                                        valueID = "EmployeeLevel";
+                                    }
+                                    items.Add(new SelectListItem() { Value = valueID, Text = item.ToString() });
+                                }
+                                @Html.DropDownList("CategoryType", items, new { @class = "form-control" })
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="admin-spacing">
+    <button id="generateReport" class="btn btn-raised btn-primary">Generate Report</button>
+    <img class="popup-loading-image" src="~/images/loading2.gif" />
+</div>
+
+<div id="chartContainer" class="admin-spacing text-center">
+    <h3 id="chartTitle"></h3>
+    <canvas id="reportChart" height="300" width="600"></canvas>
+</div>
+
+<div id="gridContainer" class="admin-spacing">
+    <div class="row">
+        <div class="col-xs-12">
+            <table id="totalsGrid" class="dataTable">
+                <thead>
+                    <tr>
+                        <th id="gridCategory">Name
+                        <th class="column-small column-centered">Total Selected
+                        <th>
+                    </tr>
+                </thead>
+                @*<tfoot>
+                    <tr>
+                        <td class="pull-right">Sum Total:
+                        <td>
+                    </tr>
+                </tfoot>*@
+            </table>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/Scripts/Admin/ChartNew.min.js" type="text/javascript"></script>
+
+    <script>
+        var action = "";
+        var chartColors = [];
+
+        $(function () {
+
+            showValidation('success', "The Usage report displays which categories were selected by users when building a plan during a given date range. " +
+                "The pie chart displays percentages of each category selected (the colors are random).  Hover your mouse over each section for more detail. " +
+                "The report lists total counts reflecting how many times a category was selected.");
+
+            // set start/end date defaults
+            $("#date-start").datepicker("option", "defaultDate", "-1m");
+            $("#date-end").datepicker("option", "defaultDate", "0");
+
+            // Init grid
+            $('#totalsGrid').DataTable({
+                paging: true,
+                pagingType: "numbers",
+                iDisplayLength: 25,
+                searching: false,
+                ordering: true,
+                info: true,
+                dom: 'Blfr<t><ip>',
+                //sAjaxDataProp: "",
+                data: [],
+                columns: [
+                   { data: "CategoryItem" },
+                   { data: "TotalCount", className: "dt-center" },
+                   { data: "SumTotalCount", visible: false }
+                ],
+                language: {
+                    emptyTable: "(No totals were available for the given selections)"
+                },
+                //select: "single",
+                buttons: [{
+                    extend: 'excel',
+                    text: '<span class="export-excel-button"></span>',
+                    titleAttr: 'Export to Excel',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<span class="export-pdf-button"></span>',
+                    titleAttr: 'Export to PDF',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                }],
+                "fnDrawCallback": function () {
+                    var rowsPerPage = this.fnSettings()._iDisplayLength;
+                    var rowsToShow = this.fnSettings().fnRecordsDisplay();
+                    if (rowsToShow <= rowsPerPage || rowsPerPage == -1) {
+                        // hide pager if only 1 page
+                        $('.dataTables_paginate').css('visibility', 'hidden');
+                    }
+                    else {
+                        $('.dataTables_paginate').css('visibility', 'visible');
+                    }
+                }
+                //"footerCallback": function (row, data, start, end, display) {
+                //    // show footer
+                //    if (display.length > 0) {
+                //        var api = this.api(), data;
+                //        var total = api.column(2, { page: 'current' }).data()[0];
+                //        $(api.column(1).footer()).html(total);
+                //    }
+                //}
+            });
+
+            // Load chart and grid data
+            $('#generateReport').click(function (e) {
+                $('#validationSuccess').hide();
+                $('#validationError').hide();
+                var form = $('#reportForm');
+                $('.popup-loading-image').show();
+                $.ajax({
+                    type: 'POST',
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function (result) {
+                        $('.popup-loading-image').hide();
+                        if (result.success) {
+                            $('#chartTitle').text($('#CategoryType option:selected').text() + " Total Selections");
+                            $('#gridCategory').text($('#CategoryType option:selected').text());
+                            $('#chartContainer').show();
+                            showCountsChart(result.data);
+                            $('#gridContainer').css('visibility', 'visible');
+                            var oTable = $('#totalsGrid').DataTable();
+                            oTable.clear().draw();
+                            var tableData = formatData(result.data);
+                            oTable.rows.add(tableData).draw();
+                        }
+                        else if (result.error) {
+                            showValidation('error', result.message);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        $('.popup-loading-image').hide();
+                        showValidation('error', '@ViewBag.LoadError');
+                    }
+                });
+                return false;
+            });
+
+        });
+
+        function formatData(resultData) {
+            // flatten grid data
+            var data = [];
+            $.each(resultData.UsageTotals, function (i, item) {
+                var item = {
+                    CategoryItem: item.CategoryItem,
+                    TotalCount: item.TotalCount,
+                    SumTotalCount: resultData.SumTotalCount
+                };
+                data.push(item);
+            });
+            return data;
+        }
+
+        function showCountsChart(resultData) {
+            var data = [];
+            $.each(resultData.UsageTotals, function (i, item) {
+                var item = {
+                    value: item.TotalCount,
+                    color: getColor(),  // "hex or rgb"
+                    title: (item.CategoryItem.length > 45) ? item.CategoryItem.substring(0, 45) + '...' : item.CategoryItem
+                };
+                data.push(item);
+            });
+
+            var report = $('#reportChart').get(0).getContext("2d");
+
+            var charJSPersonnalDefaultOptions = {
+                decimalSeparator: ",",
+                thousandSeparator: ".",
+                roundNumber: "none",
+                graphTitleFontSize: 2
+            };
+
+            var options = {
+                animation: true,
+                legend: true,
+                inGraphDataShow: true,
+                inGraphDataTmpl: "<%=v6+' %'%>",
+                annotateDisplay: true,
+                //graphMin: 0,
+                legendPosX: 4,
+                legendPosY: 2,
+                maxLegendCols: 1
+            }
+            var chart = new Chart(report).Pie(data, options);
+        }
+
+        function getColor() {
+            do {
+                var r = Math.floor(Math.random(1) * 175 + 60);
+                var g = Math.floor(Math.random(1) * 175 + 60);
+                var b = Math.floor(Math.random(1) * 175 + 60);
+                var newColor = r + g + b;
+                var color = "rgb(" + r + "," + g + "," + b + ")";
+            }   //ensure new color not in cached list
+            while ($.inArray(newColor, chartColors) > -1)
+
+            chartColors.push(newColor);
+            return color;
+        }
+
+    </script>
+}

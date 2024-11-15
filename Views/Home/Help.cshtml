@@ -1,0 +1,15 @@
+﻿@model MILearningPlan.ViewModels.Admin.HelpViewModel
+@{
+    ViewBag.Title = "Help";
+}
+@*<h2>Help and Information</h2>*@
+
+@section styles {
+    <link href="~/css/Help.css" rel="stylesheet" />
+}
+
+<div class="admin-spacing inner-content well page active">
+    <div id="helpTextDiv">
+        @Html.Raw(Model.HelpText)
+    </div>
+</div>

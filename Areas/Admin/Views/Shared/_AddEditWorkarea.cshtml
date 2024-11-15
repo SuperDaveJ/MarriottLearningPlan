@@ -1,0 +1,49 @@
+﻿@model MILearningPlan.ViewModels.Admin.AllWorkareasViewModel
+
+<form id="addEditForm">
+    <div class="row">
+        <div class="col-sm-12">
+            @*<div class="row">
+                <div class="col-sm-4">Associated Level:</div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        <label id="levelLabel"></label>
+                        @Html.Hidden("LevelName")
+                    </div>
+                </div>
+            </div>*@
+            <div class="row">
+                <div class="col-sm-4">Type:</div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        <div id="workareaSelectDiv">
+                            @{
+                                var items = new List<SelectListItem>() {
+                                    new SelectListItem() { Value = "Work Area", Text = "Work Area" },
+                                    new SelectListItem() { Value = "Management Role", Text = "Management Role" }
+                                }.ToList();
+
+                                @Html.DropDownListFor(x => x.Workarea.WorkareaType, items, new { @class = "form-control" })
+                            }
+                        </div>
+                        <div id="workareaLabelDiv">
+                            <label id="workareaLabel"></label>
+                            @Html.Hidden("Workarea.WorkareaType")
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-4">Work Area:</div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        @Html.Hidden("Workarea.WorkareaID")
+                        @Html.Hidden("Workarea.Archived")
+                        @Html.TextBoxFor(x => x.Workarea.WorkareaName, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(x => x.Workarea.WorkareaName)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

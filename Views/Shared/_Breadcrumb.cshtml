@@ -1,0 +1,39 @@
+﻿
+<div id="breadcrumb-outer">
+    <div class="btn-group btn-breadcrumb">
+        <a id="breadcrumbContinent" href="@Url.Action("FilterPlan", "LearningPlan", new { id = "continent" })" class="btn btn-default">
+            <div class="breadcrumb-inner">
+                <div><span class="glyphicon glyphicon-globe"></span> Continent</div>
+                @*<div class="description">Americas - US & Canada</div>*@
+            </div>
+        </a>
+
+        <a id="breadcrumbBrand" href="@Url.Action("FilterPlan", "LearningPlan", new { id = "brand" })" class="btn btn-default">
+            <div class="breadcrumb-inner">
+                <div><span class="glyphicon glyphicon-stats"></span> Brand</div>
+                @*<div class="description">Marriott Executive Apartments</div>*@
+            </div>
+        </a>
+
+        <a id="breadcrumbLevel" href="@Url.Action("FilterPlan", "LearningPlan", new { id = "level" })" class="btn btn-default">
+            <div class="breadcrumb-inner">
+                <div><span class="glyphicon glyphicon-user"></span> Level</div>
+                @*<div class="description">Non-Management (Hourly)</div>*@
+            </div>
+        </a>
+
+        <a id="breadcrumbWorkarea" href="@Url.Action("FilterPlan", "LearningPlan", new { id = "workarea" })" class="btn btn-default">
+            <div class="breadcrumb-inner">
+                <div><span class="glyphicon glyphicon-briefcase"></span> Primary Work Area</div>
+                @*<div class="description">Other (e.g. Retail, Recreation, Information Technology, Administration)</div>*@
+            </div>
+        </a>
+
+        <a id="breadcrumbFunction" href="@Url.Action("FilterPlan", "LearningPlan", new { id = "function" })" class="btn btn-default">
+            <div class="breadcrumb-inner">
+                <div><span class="glyphicon glyphicon-cog"></span> Role-Specific Functions</div>
+                @*<div class="description">(Multiple selected)</div>*@
+            </div>
+        </a>
+    </div>
+</div>

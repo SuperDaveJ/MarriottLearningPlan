@@ -1,0 +1,17 @@
+﻿
+/* Help page */
+
+body {
+    /*background-color: #7b94a3;
+    color: #fff;*/
+}
+
+.inner-content {
+    padding: 20px;
+    margin: 30px auto;
+    width: 85%;
+}
+
+#helpTextDiv {
+    overflow-x: auto;
+}

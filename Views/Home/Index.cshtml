@@ -1,0 +1,155 @@
+﻿@using MILearningPlan.ViewModels.Home
+
+@model HomeViewModel
+
+@{
+    ViewBag.Title = "Home";
+}
+
+@section styles {
+    <link href="~/css/Index.css" rel="stylesheet" />
+
+    <style type="text/css">
+        #splash-outer {
+            background-image: url(@ViewBag.backgroundImage);
+        }
+    </style>
+}
+
+@*<span>
+    <select id="ownership" name="ownership" class="form-control">
+        <option value=1>Managed</option>
+        <option value=2>Franchised</option>
+    </select>
+</span>*@
+
+<div id="splash-outer"></div>
+
+<div id="overlay" class="text-center">
+    <img id="LD-logo" src="~/images/LD_logo.png" />
+    <div id="build-a-plan">
+        Build a Learning Plan
+    </div>
+
+    <div id="instructions">
+        <p>Build a list of required learning experiences and when they must be completed.</p>
+        <p>You may build a plan for your own role or for another role that you select.</p>
+    </div>
+
+    <div class="text-center">
+        <div id="browser-warning" class="alert alert-danger fade in">
+            We apologize but your current browser is not compatible with some features in this product.  In order to continue, please upgrade your browser or use a different browser such as Chrome or Firefox.
+        </div>
+    </div>
+
+    <div class="text-center">
+        @if (ViewBag.maintenance != null)
+        {
+            <div id="maintenance-message" class="alert alert-danger fade in">
+                We apologize but the system is currently unavailable due to maintenance.<br /><br />
+                The estimated time it will be available again is @ViewBag.MaintenanceDateTime
+            </div>
+        }
+        else
+        {
+            if (!ViewData.ModelState.IsValid)
+            {
+                var state = ViewData.ModelState.Keys.FirstOrDefault();
+
+                switch (state)
+                {
+                    case "info":
+                    case "success":
+                    case "warning":
+                        state = "alert-" + state; break;
+                    case "error": state = "alert-danger"; break;
+                }
+                <div id="outer-alert">
+                    <div class="alert @state fade in">
+                        <a href="#" class="close" data-dismiss="alert">&times;</a>
+                        @Html.ValidationSummary()
+                    </div>
+                </div>
+            }
+
+            <div id="outer-get-started">
+                @{
+                    var buttonState = "";
+                    if (ViewBag.logoff != null || ViewBag.timeout != null || ViewBag.noAccount != null)
+                    {
+                        buttonState = "get-started-none";
+                    }
+                    <a class="btn btn-md btn-raised btn-default @buttonState" href="@Url.Action("FilterPlan", "LearningPlan")">
+                        Get Started
+                        <img id="loading2" class="popup-loading-image" src="~/images/loading2.gif" />
+                    </a>
+                }
+            </div>
+        }
+    </div>
+
+    @*@if (Model.Instructions != null)
+        {
+        <div id="disclaimer">
+            @{
+                var list = (List<InstructionsViewModel>)Model.Instructions;
+                var item = list.FirstOrDefault(x => x.ContentType == "Disclaimer");
+
+                if (item != null)
+                {
+                    @item.ContentText
+                }
+            }
+        </div>
+    }*@
+
+    <div id="terms-of-use">
+        <a class="url-link" target="_blank" href="http://www.marriott.com/marriott/termsofuse-us.mi">Terms Of Use</a>
+        <span class="pipe-separator"> | </span>
+        <a class="url-link" target="_blank" href="http://www.marriott.com/marriott/privacy-us.mi">Privacy &amp; Cookie Statement</a>
+    </div>
+</div>
+
+<input id="menuState" type="hidden" value="@ViewBag.logoff@ViewBag.timeout@ViewBag.maintenance" />
+
+@section scripts {
+    <script>
+        if ($('#menuState').val() !== '') {
+            // user logged off
+            $('#menu-icon').hide();
+            //$('#outer-get-started a').hide();
+        }
+
+        // warn and prevent use if IE ver <= 9
+        var ieMatch = navigator.appVersion.match(/(msie)[/\s]([\d.]+)/ig);
+        if ($('html').hasClass('lt-ie9') || (ieMatch != null && ieMatch.length > 0 && '' + parseFloat(ieMatch[0].match(/(\d.+)/ig)) < 10)) {
+            $('#browser-warning').show();
+            $('#menu-icon').hide();
+            $('#outer-get-started a').css('visibility','hidden');
+        }
+
+        $(function () {
+            $('#outer-get-started a').click(function () {
+                //$(this).addClass('disabled');
+                $('#outer-get-started a').html($("#outer-get-started a").html());   //IE hack to ensure animation
+                $('#loading2').show();
+            });
+
+            // testing
+            $('#ownership').change(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("UpdateOwnership")',
+                    dataType: 'json',
+                    data: {
+                        ownership: $('#ownership').val()
+                    },
+                    success: function (result) {
+                    }
+                });
+            });
+
+        });
+
+</script>
+}

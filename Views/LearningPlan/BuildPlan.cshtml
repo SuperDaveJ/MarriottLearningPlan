@@ -1,0 +1,370 @@
+﻿@using MILearningPlan.SharedLibrary;
+
+@model MILearningPlan.ViewModels.LearningPlan.UserSelectionsViewModel
+
+@{
+    ViewBag.Title = "Build";
+}
+
+@section styles {
+    <link href="~/css/BuildPlan.css" rel="stylesheet" />
+}
+
+<div class="inner-content build-plan-spacing">
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="well page active">
+               
+                @if (@Model != null)
+                { 
+                    <div id="nameDiv">@Model.FullName</div>
+                    <div id="levelDiv">@Model.Level.LevelName @((Model.IsHGC)? "- HGC" : "")</div>
+                    <div id="workareaDiv">@Model.Workarea.WorkareaName</div>
+                    <div id="brandDiv">@Model.Brand.BrandName</div>
+                    <div id="ownershipDiv">@Model.Ownership.OwnershipType</div>
+                    <div id="continentDiv">@Model.Continent.ContinentName</div>
+                }
+
+                @if (Model.FunctionList != null && Model.FunctionList.Count > 0)
+                {
+                    <div id="functionDiv">
+                        <ul>
+                            @foreach (var item in @Model.FunctionList)
+                            {
+                                <li>@Html.Raw(HttpUtility.HtmlEncode(item.FunctionName))</li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div class="well page active">
+                <div id="summaryTitle">My Learning Plan</div>
+                <p class="instructions">
+                    Click "+" to see more details about the requirements for an item.
+                    Click the item title (link) to visit myLearning or MGS to find details about the course, or to start an online course.
+                    myLearning will track your learning completions.
+                </p>
+
+                <table id="programsGrid" class="dataTable">
+                    <thead>
+                        <tr>
+                            <th>
+                            <th>TimingDescription
+                            <th>Course
+                            <th>Details
+                        </tr>
+                    </thead>
+                    <tbody id="build-plan-table-body">
+                        @{
+                            if (@Model.ProgramList != null)
+                            {
+                                foreach (var item in @Model.ProgramList)
+                                {
+                                    <tr class="table-details-row">
+                                        <td>
+                                        <td>@item.TimingDescription
+                                        <td><a href='@((@item.ProgramLink != null) ? @item.ProgramLink : "")' target="_blank">@item.ProgramTitle</a>
+                                        <td class="table-details-width">@item.ProgramAdditionalDetails
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+
+                <div class="instruction-spacing instructions">
+                    You can save a learning plan on your own device, print it, or create another one at any time. The plan you build is not saved centrally.
+                    Talk with your trainer or manager to ask questions and work out the details for completing your training.
+                </div>
+
+                <button id="emailButton" class="btn btn-md btn-raised btn-primary build-plan-button" role="button">Email</button> &nbsp;
+                <button id="exportButton" class="btn btn-md btn-raised btn-primary build-plan-button" role="button">Download</button> &nbsp;
+                <img id="loading2" src="~/images/loading2.gif" />
+                
+                <div class="instruction-spacing instructions">
+                    Build another Learning Plan
+                </div>
+                <a id="startOverButton" class="btn btn-md btn-raised btn-primary build-plan-button" role="button" href="@Url.Action("ResetPlan","LearningPlan")">Start Over</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="emailDialog" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" title="Cancel">&times;</button>
+                <h4 class="modal-title">Email Your Learning Plan</h4>
+            </div>
+            <div class="modal-body">
+                @Html.Partial("_EmailForm")
+            </div>
+            <div class="modal-footer">
+                <img class="popup-loading-image" src="~/images/loading2.gif" />
+                <button id="sendEmailButton" class="btn btn-md btn-raised btn-primary build-plan-button">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@using (Html.BeginForm("ExportPDF", "Export", FormMethod.Post, new { id = "formExport" }))
+{
+    <input type="hidden" id="exportHtml" name="exportHtml" value="" />
+}
+
+@section scripts {
+    <script>
+        $(function () {
+
+            $("#hidden-temp-data").val($('#build-plan-table-body').html());
+
+            // init grid
+            var grid = $("#programsGrid").DataTable({
+                paging: false,
+                bLengthChange: false,   // show # entries dropdown
+                iDisplayLength: 10,     // # records default
+                pagingType: "numbers",
+                searching: false,
+                ordering: false,
+                //info: true,
+                columns: [
+                    {
+                        "className": 'details-control',
+                        "orderable": false,
+                        "data": null,
+                        "defaultContent": ''
+                    },
+                    { data: "TimingDescription", visible: false },
+                    { data: "ProgramLink" },
+                    { data: "ProgramAdditionalDetails", visible: false }
+                ],
+                //order: [[1, 'asc']],
+                language: {
+                    emptyTable: "(No courses were found for your current selections)"
+                },
+                "fnDrawCallback": function () {
+                    //var rowsPerPage = this.fnSettings()._iDisplayLength;
+                    //var rowsToShow = this.fnSettings().fnRecordsDisplay();
+                    //if (rowsToShow <= rowsPerPage || rowsPerPage == -1) {
+                    //    // hide pager if only 1 page
+                    //    $(".dataTables_paginate", this.parent()).css("display", "none");
+                    //}
+
+                    //$('.dataTables_paginate span').prepend('<label class="instructions">Page: &nbsp;</label>');
+
+                    // group by TimingDescription
+                    var api = this.api();
+                    var rows = api.rows({ page: 'current' }).nodes();
+                    var last = null;
+
+                    api.column(1, { page: 'current' }).data().each(function (group, i) {
+                        if (last !== group) {
+                            $(rows).eq(i).before(
+                                '<tr class="build-plan-group-heading"><td colspan="2">' + group + '</td></tr>'
+                            );
+                            last = group;
+                        }
+                    });
+                },
+                "fnInitComplete": function (settings, json) {
+                    $("#programsGrid").show();
+                }
+            });
+
+            // collapse/expand row
+            $('#programsGrid tbody').on('click', 'td.details-control', function () {
+                var tr = $(this).closest('tr');
+                var row = grid.row(tr);
+
+                if (row.child.isShown()) {
+                    // collapse
+                    row.child.hide();
+                    tr.removeClass('shown');
+                }
+                else {
+                    // expand
+                    var rowData = '<div class="expand-details-row">' + row.data().ProgramAdditionalDetails + '</div>';
+                    row.child(rowData).show();
+                    tr.addClass('shown');
+                }
+            });
+
+
+            // get export page html to create/download pdf
+            $("#exportButton").click(function () {
+                // load output page
+                var result = '';
+                var htmlContent = '';
+                $('#exportButton').addClass('disabled');
+                $('#loading2').show();
+
+                $.when(
+                    result = getOutputHtml()
+                ).done(function () {
+                    htmlContent = encodeHtml(result.responseText)
+
+                    // download pdf
+                    $.ajax({
+                        url: '@Url.Action("LoadPDF", "Export")',
+                        type: 'POST',
+                        data: {
+                            fileName: 'LearningPlan.pdf',
+                            htmlContent: htmlContent
+                        },
+                        success: function (data) {
+                            //$('#exportHtml').val(data);
+                            $('#formExport').trigger('submit');
+                        },
+                        error: function (ex) {
+                            //alert('Problem returning data: ' + ex);
+                        },
+                        beforeSend: function () {
+                            //$('#loading2').show();
+                        },
+                        complete: function () {
+                            $('#loading2').hide();
+                            $('#exportButton').removeClass('disabled');
+                        }
+                    });
+                });
+            });
+
+            function getOutputHtml() {
+                // load output page
+                return $.get('@Url.Action("ExportPlan", "Export")',
+                      function (data, status) {
+                          if (status === 'success') {
+                              tempHtml = data;
+                          }
+                      },
+                      'html'
+                    );
+            }
+
+            function encodeHtml(tempHtml) {
+                // htmlEncode to allow posting
+                return $("<div/>").text(tempHtml).html();
+            }
+
+            // clear validation errors
+            $.fn.clearErrors = function () {
+                $('.field-validation-error').text('');
+                $('.input-validation-error').text('');
+            };
+
+            // Show email popup
+            $('#emailButton').click(function (e) {
+                e.preventDefault();
+                $('#emailForm input').clearErrors();
+                resetDialog('#emailDialog');
+
+                $('#emailForm #Email_EmailAddress').val('');
+                $('#emailDialog').modal('show');
+            });
+
+            // send email button
+            $('#sendEmailButton').click(function (e) {
+                var result = '';
+                $.when(
+                    result = validateEmail('#emailForm', '#emailDialog')
+                ).done(function () {
+                    if (result !== undefined && result.responseJSON !== undefined) {
+                        if (result.responseJSON.success) {
+                            emailLearningPlan('#emailForm', '#emailDialog')
+                        }
+                    }
+                });
+                
+                return false;
+            });
+
+            // valildate email address
+            function validateEmail(formId, dialogId) {
+                var form = $(formId);
+                disableDialogButton(dialogId, true);
+                $('.popup-loading-image').show();
+                return $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("ValidateEmail", "Export", new { area = "" })',
+                    data: form.serialize(),
+                    success: function (result) {
+                        if (result.success) {
+                            //$(dialogId).modal('hide');
+                        }
+                        else {
+                            resetDialog(dialogId);
+                            //$(dialogId).modal('hide');
+                            // Update form to show errors
+                            form.html(result);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        resetDialog(dialogId);
+                        $(dialogId).modal('hide');
+                    }
+                });
+            }
+
+            // email learning plan
+            function emailLearningPlan(formId, dialogId) {
+                var form = $(formId);
+                disableDialogButton(dialogId, true);
+                $('.popup-loading-image').show();
+
+                var result = '';
+                var htmlContent = '';
+                $.when(
+                    result = getOutputHtml()
+                ).done(function () {
+                    htmlContent = encodeHtml(result.responseText);
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("EmailLearningPlan", "Export")',
+                        data: {
+                            emailAddress: $('#emailForm #Email_EmailAddress').val(),
+                            htmlContent: htmlContent
+                        },
+                        success: function (result) {
+                            resetDialog(dialogId);
+                            if (result.success) {
+                                $(dialogId).modal('hide');
+                            }
+                            else if (result.error) {
+                                $(dialogId).modal('hide');
+                                //showValidation('error', result.message);
+                            }
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            resetDialog(dialogId);
+                            $(dialogId).modal('hide');
+                            //showValidation('error', result.message);
+                        }
+                    });
+                });
+            }
+
+        });
+
+        // disable dialog button
+        function disableDialogButton(dialogId, disabled) {
+            if (disabled) {
+                $('#sendEmailButton').addClass('disabled');
+            }
+            else {
+                $('#sendEmailButton').removeClass('disabled');
+            }
+        }
+
+        // restore dialog button, hide loading gif
+        function resetDialog(dialogId) {
+            disableDialogButton(dialogId, false);
+            $('.popup-loading-image').hide();
+        }
+    </script>
+}

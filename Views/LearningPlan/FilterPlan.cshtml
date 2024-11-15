@@ -1,0 +1,492 @@
+﻿@using MILearningPlan.ViewModels.LearningPlan
+
+@model LearningPlanViewModel
+
+@{
+    ViewBag.Title = "Select";
+}
+
+@section styles {
+    <link href="~/css/FilterPlan.css" rel="stylesheet" />
+}
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="inner-content well page active">
+
+            @using (Html.BeginForm("ReviewPlan", "LearningPlan", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                <section id="nameDiv">
+                    <label>Your name or position?</label>
+                    @Html.TextBoxFor(x => x.FullName, new { @class = "form-control", @placeholder = "First and last name, or position" })
+                    @Html.ValidationMessageFor(x => x.FullName)
+                </section>
+
+                <section id="ownershipDiv">
+                    <label>Your property type?</label>
+                    <div class="form-group">
+                        @if (Model.OwnershipList != null)
+                        {
+                            foreach (var item in (Model.OwnershipList as List<OwnershipViewModel>))
+                            {
+                                var state = ((Model.UserSelections != null && Model.UserSelections.Ownership != null && item.OwnershipID == Model.UserSelections.Ownership.OwnershipID) ? "checked=''" : "");  // last user selection
+                                <div class="radio radio-primary">
+                                    <label>
+                                        <input type="radio" name="ownership" value="@item.OwnershipID" data-value="@item.OwnershipType" @state>@item.OwnershipType
+                                    </label>
+                                </div>
+                            }
+                            @Html.ValidationMessageFor(x => x.OwnershipList)
+                        }
+                    </div>
+                </section>
+
+                <section id="continentDiv">
+                    <label>Your location?</label>
+                    <div class="form-group">
+                        @if (Model.ContinentList != null)
+                        {
+                            foreach (var item in (Model.ContinentList as List<ContinentViewModel>))
+                            {
+                                var state = ((Model.UserSelections != null && Model.UserSelections.Continent != null && item.ContinentID == Model.UserSelections.Continent.ContinentID) ? "checked=''" : "");  // last user selection
+                                <div class="radio radio-primary">
+                                    <label>
+                                        <input type="radio" name="continents" value="@item.ContinentID" data-value="@item.ContinentName" @state>@item.ContinentName
+                                    </label>
+                                </div>
+                            }
+                            @Html.ValidationMessageFor(x => x.ContinentList)
+                        }
+                    </div>
+                </section>
+
+                <section id="brandDiv" class="dropdown">
+                    <div><label>Your brand?</label></div>
+                    @{
+                        var brandText = ((Model.UserSelections != null && Model.UserSelections.Brand != null) ? Model.UserSelections.Brand.BrandName : "Select one");
+                    }
+                    <label class="dropdown-toggle" data-toggle="dropdown" data-target="#" href="#">@brandText</label>
+                    <span class="caret"></span>
+                    <ul id="brand" class="dropdown-menu" role="menu">
+                        @if (Model.BrandList != null)
+                        {
+                            foreach (var item in (Model.BrandList as List<BrandViewModel>))
+                            {
+                                <li id="@item.BrandID">@item.BrandName</li>
+                            }
+                        }
+                    </ul>
+                </section>
+
+                <section id="levelDiv" class="dropdown">
+                    <div><label>Your level?</label></div>
+                    @{
+                        var levelText = ((Model.UserSelections != null && Model.UserSelections.Level != null) ? Model.UserSelections.Level.LevelName : "Select one");
+                    }
+                    <label class="dropdown-toggle" data-toggle="dropdown" data-target="#" href="#">@levelText</label>
+                    <span class="caret"></span>
+                    <ul id="level" class="dropdown-menu" role="menu">
+                        @if (Model.LevelList != null)
+                        {
+                            foreach (var item in (Model.LevelList as List<LevelViewModel>))
+                            {
+                                <li id="@item.LevelID">@item.LevelName</li>
+                            }
+                        }
+                    </ul>
+                </section>
+
+                <div id="HGCInput" class="checkbox">
+                    <label>
+                        @{ 
+                            var HGCState = ((Model.UserSelections != null && Model.UserSelections.IsHGC) ? "checked=''" : "");  // last user selection
+                        }
+                        <input id="HGC" name="HGC" type="checkbox" value="0" data-value="HGC" @HGCState>High Guest Contact &nbsp;
+                        <span data-toggle="tooltip" data-placement="top" title="Certain non-management and supervisor positions are designated as &quot;High Guest Contact&quot; for service training purposes. Ask your manager to confirm if your job is considered &quot;High Guest Contact.&quot;">
+                            <img id="HGCHelp" src="~/images/help.png" />
+                        </span>
+                    </label>
+                </div>
+
+                <section id="workareaDiv" class="dropdown">
+                    <div><label>Your work area?</label></div>
+                    @{
+                        var workareaText = ((Model.UserSelections != null && Model.UserSelections.Workarea != null) ? Model.UserSelections.Workarea.WorkareaName : "Select one");
+                    }
+                    <label class="dropdown-toggle" data-toggle="dropdown" data-target="#" href="#">@workareaText</label>
+                    <span class="caret"></span>
+                    <ul id="workarea" class="dropdown-menu" role="menu">
+                        @if (Model.UserSelections != null && Model.WorkareaList != null)
+                        {
+                            foreach (var item in (Model.WorkareaList as List<WorkareaViewModel>))
+                            {
+                                <li id="@item.WorkareaID" data-workareaType=@item.WorkareaType.Replace(' ', '_')>@item.WorkareaName</li>
+                            }
+                        }
+                        else {
+                            <li id="0">Select one</li>
+                        }
+                    </ul>
+                    <div id="workareaTooltip" data-toggle="toggle" data-placement="top" title="Please complete all items above before selecting a work area" />
+                </section>
+
+                <section id="functionDiv">
+                    <div><label>Your additional roles?</label></div>
+                    <div id="function">
+                        @if (Model.UserSelections != null && Model.FunctionList != null)
+                        {
+                            foreach (var item in (Model.FunctionList as List<FunctionViewModel>))
+                            {
+                                if (Model.UserSelections != null && Model.UserSelections.FunctionList != null)
+                                {
+                                    var state = "";
+                                    foreach (var userFunction in Model.UserSelections.FunctionList)
+                                    {
+                                        if (item.FunctionID == userFunction.FunctionID)
+                                        {
+                                            state = "checked=''";  // last user selection
+                                            break;
+                                        }
+                                    }
+                                    <div class="checkbox">
+                                        <label><input type="checkbox" value="@item.FunctionID" data-value="@item.FunctionName" @state>@item.FunctionName</label>
+                                    </div>
+                                }
+                            }
+                        }
+                    </div>
+                </section>
+
+                <input id="ownershipHidden" type="hidden" value="" name="ownershipHidden" />
+                <input id="nameHidden" type="hidden" value="" name="nameHidden" />
+                <input id="continentHidden" type="hidden" value="" name="continentHidden" />
+                <input id="brandHidden" type="hidden" value="" name="brandHidden" />
+                <input id="levelHidden" type="hidden" value="" name="levelHidden" />
+                <input id="workareaHidden" type="hidden" value="" name="workareaHidden" />
+                <input id="functionHidden" type="hidden" value="" name="functionHidden" />
+
+                <div id="buttonDiv">
+                    <button id="submitButton" type="submit" class="btn btn-md btn-raised btn-primary">View My Plan</button>
+                </div>
+            }
+
+            <input id="userSelections" type="hidden" value="@Model.UserSelections" />
+        </div>
+
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+
+            if ($('#userSelections').val() !== "") {
+                // set ownership selection
+                var ownershipItem = $('#ownershipDiv input[name="ownership"]:checked');
+                if ($(ownershipItem).prop('checked') === true) {
+                    selectChanged('ownership', ownershipItem.val(), ownershipItem);
+                }
+
+                // set continent selection
+                var continentItem = $('#continentDiv input[name="continents"]:checked');
+                if ($(continentItem).prop('checked') === true) {
+                    selectChanged('continent', continentItem.val(), continentItem);
+                }
+            
+                // set brand selection
+                var brand = $('#brandDiv label.dropdown-toggle');
+                var brandText = $(brand).text();
+                if (brandText !== 'Select one') {
+                    var li = $(brand).siblings('ul').find('li:contains(' + brandText + ')')
+                    $('#brandHidden').val($(li).attr('id') + '|' + brandText);
+                }
+
+                // set level selection
+                var level = $('#levelDiv label.dropdown-toggle');
+                var levelText = $(level).text();
+                if (levelText !== 'Select one') {
+                    var li = $(level).siblings('ul').find('li:contains(' + levelText + ')')
+                    $('#levelHidden').val($(li).attr('id') + '|' + levelText);
+
+                    if (Number($(li).attr('id')) > 1) {
+                        $('#HGCInput').show();
+                    }
+                }
+
+                // set workarea selection
+                var workarea = $('#workareaDiv label.dropdown-toggle');
+                var workareaText = $(workarea).text();
+                if (workareaText !== 'Select one') {
+                    var li = $(workarea).siblings('ul').find('li:contains(' + workareaText + ')')
+                    var extra = $(li).attr('data-workareaType')
+                    $('#workareaHidden').val($(li).attr('id') + '|' + workareaText + '|' + extra);
+                }
+
+                $('#function input').change(function () {
+                    selectChanged("function", $(this).val(), $(this));
+                });
+
+                if ($('#function input[checked]').length === 0) {
+                    var items = $('#function input');
+                    // check (none of the above)
+                    var last = $(items[items.length-1]);
+                    if (last.val() === '0') {
+                        last.prop('checked', true);
+                    }
+                }
+                $('#buttonDiv').show();
+            }
+
+            $('#ownershipDiv input[name="ownership"]').change(function () {
+                var id = 'ownership';
+                selectChanged(id, $(this).val(), $(this));
+            });
+
+            $('#continentDiv input[name="continents"]').change(function () {
+                var id = 'continent';
+                selectChanged(id, $(this).val(), $(this));
+            });
+
+            $('[data-toggle="tooltip"]').tooltip({
+                html: true
+            });
+
+            $('span.caret').click(function () {
+                var item = $(this).siblings('.dropdown-menu');
+                $(item).dropdown('toggle');
+                return false;
+            });
+
+            //$('.dropdown-toggle').click(function () {
+            //    $(this).siblings('.dropdown-menu').fadeToggle(500);
+            //});
+
+            $('#workareaDiv').on('shown.bs.dropdown', function () {
+                if ($(this).find('li').length === 1) {
+                    $('#workareaTooltip').tooltip('show');
+                }
+                else {
+                    var _continentID = Number($('#continentHidden').val().split('|')[0]);
+                    var _brandID = Number($('#brandHidden').val().split('|')[0]);
+
+                    if (_continentID === 0 || _brandID === 0) {
+                        $('#workareaTooltip').tooltip('show');
+                    }
+                }
+            });
+
+            $('#workareaDiv').on('hide.bs.dropdown', function () {
+                if ($('#workareaTooltip').css('display') !== 'none') {
+                    $('#workareaTooltip').tooltip('hide');
+                }
+            });
+
+            $("ul li").click(function () {
+                liClicked($(this));
+            });
+
+            $('#submitButton').click(function () {
+                $('#nameHidden').val($('#FullName').val());
+            });
+        });
+
+        function liClicked(li) {
+            var item = $(li);
+            var val = item.attr('id');
+            var section = item.closest('section');
+            section.find('label.dropdown-toggle').text(item.text());
+            var divId = item.parent('ul').attr('id');
+
+            if (divId === 'level') {
+                $('#HGCInput input').prop('checked', false);
+            }
+            selectChanged(divId, val, item);
+        }
+
+        function getLevelID() {
+            var levelID = $('#levelHidden').val().split('|')[0];
+            if ($('#HGCInput input').prop('checked') === true) {
+                if (levelID === '2') {
+                    // Hourly and HGC
+                    levelID = '4';
+                }
+                else if (levelID === '3') {
+                    // Supervisor and HGC
+                    levelID = '5';
+                }
+            }
+            else {
+                if (levelID > 3) {
+                    levelID -= 2;
+                }
+            }
+            return levelID;
+        }
+
+        $('#HGCInput input').click(function () {
+            // HGC checked, refire selectChanged
+            var levelID = $('#levelHidden').val().split('|')[0];
+            selectChanged('level', levelID, $('<li />'));
+        });
+
+        function resetWorkarea() {
+            $('#workareaDiv label.dropdown-toggle').text('Select one');
+            $('#workarea').empty();
+            $('#workarea').append('<li id="0">Select one</li>');
+        }
+
+        function selectChanged(id, value, el) {
+            var text = $('#' + id + 'Div label.dropdown-toggle').text();
+
+            switch (id) {
+                // update hidden values with selected id | text
+                case 'ownership':
+                case 'continent':
+                    text = el.attr('data-value');
+                    $('#' + id + 'Hidden').val(value + '|' + text);
+                    break;
+                case 'brand':
+                    $('#' + id + 'Hidden').val(value + '|' + text);
+                    // reset items below brand
+                    $('#levelDiv label.dropdown-toggle').text('Select one');
+                    $('#HGCInput').hide();
+                    $('#HGCInput input').prop('checked', false);
+                    resetWorkarea();
+                    $('#function').empty();
+                    break;
+                case 'level':
+                    $('#' + id + 'Hidden').val(value + '|' + text);
+                    // reset items below level
+                    resetWorkarea();
+                    $('#function').empty();
+                    // show HGC for hourly/supervisor
+                    if (value > 1) {
+                        $('#HGCInput').show();
+                        value = getLevelID();
+                        $('#' + id + 'Hidden').val(value + '|' + text);
+                    }
+                    else {
+                        $('#HGCInput').hide();
+                    }
+                    break;
+                case 'workarea':
+                    var extra = $(el).attr('data-workareaType')
+                    $('#' + id + 'Hidden').val(value + '|' + text + '|' + extra);
+                    break;
+                case 'function':
+                    var optionsList = [];
+                    var items = $('#function input');
+                    var checked = false;
+
+                    // if (none of the above) selected, uncheck all
+                    var last = $(items[items.length-1]);
+                    if (last.val() === '0' && last.prop('checked')) {
+                        $.each(items, function (i, item) {
+                            if ($(item).val() > 0) {
+                                $(item).prop('checked', false);
+                            }
+                        });
+                    }
+
+                    // get selections from function
+                    $.each(items, function (i, item) {
+                        if ($(item).prop('checked')) {
+                            checked = true;
+                            var selected = $(item).val() + "|" + $(item).attr('data-value');
+                            optionsList.push(selected);
+                        }
+                    });
+
+                    $('#functionHidden').val(optionsList);
+
+                    if (checked) {
+                        $('#buttonDiv').show();
+                    }
+                    else {
+                        $('#buttonDiv').hide();
+                    }
+
+                    return false;
+                    break;
+            }
+
+            // get data and build next dropdown
+            if (id === 'level') {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("GetWorkareas")',
+                    dataType: 'json',
+                    data: {
+                        levelID: value  //_levelID
+                    },
+                    success: function (items) {
+                        var options = $('#workareaDiv ul');
+                        options.empty();
+
+                        $.each(items, function (i, item) {
+                            var optionItem = $('<li id=' + item.WorkareaID + ' data-workareaType=' + item.WorkareaType.replace(' ', '_') + '>' + item.WorkareaName + '</li>');
+                            options.append(optionItem);
+                            $(optionItem).click(function() {
+                                liClicked(optionItem);
+                            });
+                        });
+                    },
+                    error: function (ex) {
+                        //alert('Problem returning data: ' + ex);
+                    }
+                });
+            }
+            else if (id === 'workarea') {
+                var _levelID = getLevelID();
+
+                if (_levelID === "") {
+                    // no levels selected yet
+                    return false;
+                }
+                
+                var _continentID = Number($('#continentHidden').val().split('|')[0]);
+                var _brandID = Number($('#brandHidden').val().split('|')[0]);
+
+                if (_continentID === 0 || _brandID === 0) {
+                    return false;
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("GetFunctions")',
+                    dataType: 'json',
+                    data: {
+                        continentID: _continentID,
+                        brandID: _brandID,
+                        levelID: Number(_levelID)
+                    },
+                    success: function (items) {
+                        var options = $('#function');
+                        options.empty();
+
+                        $.each(items, function (i, item) {
+                            var optionItem = "<div class='checkbox'><label>"
+                                + "<input type='checkbox' value='"+item.FunctionID+"' data-value='"+item.FunctionName+"'>"+item.FunctionName
+                                + "</label></div>"
+                            options.append(optionItem);
+                        });
+
+                        $.material.init();
+
+                        $('#function input').change(function () {
+                            selectChanged("function", $(this).val(), $(this));
+                        });
+
+                        $('#buttonDiv').hide();
+                    },
+                    error: function (ex) {
+                        //alert('Problem returning data: ' + ex);
+                    }
+                });
+            }
+        }
+
+    </script>
+}

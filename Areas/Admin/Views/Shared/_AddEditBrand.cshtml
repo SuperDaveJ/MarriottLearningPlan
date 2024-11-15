@@ -1,0 +1,21 @@
+﻿@model MILearningPlan.ViewModels.Admin.AllBrandsViewModel
+
+@*@Html.AntiForgeryToken()*@
+
+<form id="addEditForm">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="row">
+                <div class="col-sm-4">Brand Name:</div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        @Html.Hidden("Brand.BrandID")
+                        @Html.Hidden("Brand.Archived")
+                        @Html.TextBoxFor(x => x.Brand.BrandName, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(x => x.Brand.BrandName)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,251 @@
+﻿@model MILearningPlan.ViewModels.Admin.UserLogonReportViewModel
+
+@{
+    ViewBag.Title = "User Plans Report";
+}
+
+@section styles {
+    <link href="~/css/Admin/UserLogOnReport.css" rel="stylesheet" />
+    <link href="~/css/Admin/datepicker-calendar.css" rel="stylesheet" />
+}
+
+<div class="row admin-spacing">
+    <div class="col-sm-12">
+        <div class="report-filters-title">Report Filters</div>
+        <hr />
+        @using (Html.BeginForm("GetUserLogOnReport", "Reports", new { area = "Admin" }, FormMethod.Post, new { id = "reportForm" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+                <div class="col-sm-2">
+                    @{
+                        foreach (var item in ViewBag.MFTypes)
+                        {
+                            <div class="radio">
+                                <label>@Html.RadioButtonFor(m => m.MFTypeID, (int?)item.Value, (item.Key == "Both") ? new { @checked = "" } : null)@item.Key</label>
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="col-sm-3">
+                    <div class="control-group">
+                        <label for="date-start" class="control-label">Start Date</label>
+                        <div class="controls">
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.StartDate, new { @id = "date-start", @class = "date-picker form-control" })
+                                <label for="date-start" class="input-group-addon btn">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <div class="control-group">
+                        <label for="date-end" class="control-label">End Date</label>
+                        <div class="controls">
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.EndDate, new { @id = "date-end", @class = "date-picker form-control" })
+                                <label for="date-end" class="input-group-addon btn">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="admin-spacing">
+    <button id="generateReport" class="btn btn-raised btn-primary">Generate Report</button>
+    <img class="popup-loading-image" src="~/images/loading2.gif" />
+</div>
+
+<div id="chartContainer" class="admin-spacing text-center">
+    <h3>User Plans Created</h3>
+    <canvas id="reportChart" height="300" width="400"></canvas>
+</div>
+
+<div id="gridContainer" class="admin-spacing">
+    <div class="row">
+        <div class="col-xs-12">
+            <table id="usersGrid" class="dataTable">
+                <thead>
+                    <tr>
+                        <th>Date
+                        <th class="column-centered">Unique Users
+                        <th class="column-centered">Total Plans Created
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/Scripts/Admin/ChartNew.min.js" type="text/javascript"></script>
+
+    <script>
+        var action = "";
+
+        $(function () {
+
+            showValidation('success', "The User Plans report shows totals of user plans created for a given date range. " +
+                "The graphic displays the total user plan counts as seen in the report. " +
+                "For each date, the report displays Unique Users (distinct count of each user who created a plan), and Total Plans Created (count of all users who created a plan).");
+
+            // set start/end date defaults
+            $("#date-start").datepicker("option", "defaultDate", "-1m");
+            $("#date-end").datepicker("option", "defaultDate", "0");
+
+            // Init grid
+            $('#usersGrid').DataTable({
+                paging: true,
+                pagingType: "numbers",
+                iDisplayLength: 25,
+                searching: false,
+                ordering: true,
+                info: true,
+                dom: 'Blfr<t><ip>',
+                sAjaxDataProp: "UserLogOnTotals",
+                data: [],
+                columns: [
+                    {
+                        data: "UserDate",
+                        className: "dt-center",
+                        type: 'date',
+                        render: function (val, type, full, meta) {
+                            //if (type == "display") {
+                                var date = new Date(parseInt(val.substr(6)));
+                                //return date.getDay() + "/" + date.getMonth() + 1 + "/" + date.getYear();
+                                var options = { year: "numeric", month: "numeric", day: "numeric" };
+                                return date.toLocaleDateString('en-US', options);
+                            //}
+                            //return val;
+                        }
+                    },
+                    { data: "UniqueCount", className: "dt-center" },
+                    { data: "TotalCount", className: "dt-center" },
+                ],
+                language: {
+                    emptyTable: "(No totals were available for the given selections)"
+                },
+                //select: "single",
+                buttons: [{
+                    extend: 'excel',
+                    text: '<span class="export-excel-button"></span>',
+                    titleAttr: 'Export to Excel',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<span class="export-pdf-button"></span>',
+                    titleAttr: 'Export to PDF',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                }],
+                "fnDrawCallback": function () {
+                    var rowsPerPage = this.fnSettings()._iDisplayLength;
+                    var rowsToShow = this.fnSettings().fnRecordsDisplay();
+                    if (rowsToShow <= rowsPerPage || rowsPerPage == -1) {
+                        // hide pager if only 1 page
+                        $('.dataTables_paginate').css('visibility', 'hidden');
+                    }
+                    else {
+                        $('.dataTables_paginate').css('visibility', 'visible');
+                    }
+                }
+            });
+
+            // Load chart and grid data
+            $('#generateReport').click(function (e) {
+                $('#validationSuccess').hide();
+                $('#validationError').hide();
+                var form = $('#reportForm');
+                $('.popup-loading-image').show();
+                $.ajax({
+                    type: 'POST',
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function (result) {
+                        $('.popup-loading-image').hide();
+                        if (result.success) {
+                            $('#chartContainer').show();
+                            showCountsChart(result.data);
+                            $('#gridContainer').css('visibility', 'visible');
+                            var oTable = $('#usersGrid').DataTable();
+                            oTable.clear().draw();
+                            oTable.rows.add(result.data.UserLogOnTotals).draw();
+                            //oTable.columns.adjust().draw();
+                            //$.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+                        }
+                        else if (result.error) {
+                            showValidation('error', result.message);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        $('.popup-loading-image').hide();
+                        showValidation('error', '@ViewBag.LoadError');
+                    }
+                });
+                return false;
+            });
+
+        });
+
+        function showCountsChart(resultData) {
+
+            var data = {
+                labels: [""],
+                datasets: [
+                    {
+                        //label: "Unique Count",
+                        fillColor: "rgba(77,220,77,0.5)",
+                        strokeColor: "rgba(77,220,77,0.8)",
+                        highlightFill: "rgba(77,220,77,0.75)",
+                        highlightStroke: "rgba(77,220,77,1)",
+                        data: [resultData.SumUniqueCount],
+                        title: " Unique Users "
+                    },
+                    {
+                        //label: "Total Count",
+                        fillColor: "rgba(51,153,255,0.5)",
+                        strokeColor: "rgba(51,153,255,0.8)",
+                        highlightFill: "rgba(51,153,255,0.75)",
+                        highlightStroke: "rgba(51,153,255,1)",
+                        data: [resultData.SumTotalCount],
+                        title: " Total Plans Created "
+                    }
+                ]
+            };
+                
+            var report = $('#reportChart').get(0).getContext("2d");
+
+            var charJSPersonnalDefaultOptions = {
+                decimalSeparator: ",",
+                thousandSeparator: ".",
+                roundNumber: "none",
+                graphTitleFontSize: 2
+            };
+
+            var options = {
+                animation: true,
+                legend: true,
+                showSingleLegend: true,
+                inGraphDataShow: true,
+                //datasetFill: false,
+                annotateDisplay: true,
+                graphMin: 0,
+                yAxisLabel: "Total Plans",
+                yAxisMinimumInterval: 25
+            }
+            var chart = new Chart(report).Bar(data, options);
+        }
+    </script>
+}
